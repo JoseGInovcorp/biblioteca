@@ -6,7 +6,7 @@
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 <a href="{{ route('livros.create') }}" class="btn btn-success mb-4">➕ Criar Livro</a>
 
-<form method="GET" class="flex gap-2 mb-4">
+<form method="GET" class="flex flex-wrap gap-2 mb-4">
     <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar..." class="input input-bordered" />
     <select name="editora_id" class="select select-bordered">
         <option value="">Todas as Editoras</option>
@@ -28,11 +28,32 @@
     <thead>
         <tr>
             <th>Capa</th>
-            <th><a href="?sort=nome&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">Nome</a></th>
-            <th>ISBN</th>
+            <th>
+                <a href="?sort=nome&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
+                    Nome
+                    @if($sort === 'nome')
+                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
+                    @endif
+                </a>
+            </th>
+            <th>
+                <a href="?sort=isbn&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
+                    ISBN
+                    @if($sort === 'isbn')
+                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
+                    @endif
+                </a>
+            </th>
             <th>Editora</th>
             <th>Autores</th>
-            <th>Preço</th>
+            <th>
+                <a href="?sort=preco&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
+                    Preço
+                    @if($sort === 'preco')
+                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
+                    @endif
+                </a>
+            </th>
             <th>Ações</th>
         </tr>
     </thead>
