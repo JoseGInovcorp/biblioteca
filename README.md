@@ -90,6 +90,24 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 - Criação de novo repositório GitHub da Inovcorp com histórico limpo.
 - Tema DaisyUI **Silk** aplicado globalmente.
 
+### Dia 6
+- Reconfiguração do ambiente de desenvolvimento num novo portátil.
+- Implementado sistema de permissões com dois perfis: **Admin** e **Cidadão**.
+- Criado menu “📦 Requisições” acessível a ambos os perfis.
+- Validação de disponibilidade de livros antes da requisição.
+- Limite de 3 requisições ativas por cidadão.
+- Requisição regista foto do cidadão, data de início e fim prevista (+5 dias).
+- Admin pode confirmar entrega e registar data real.
+- Filtro por status na listagem de requisições.
+- Indicadores no topo da página de requisições:
+  - Total de requisições ativas
+  - Requisições nos últimos 30 dias
+  - Livros entregues hoje
+- Histórico de requisições visível no detalhe de cada livro.
+- Criado `UserController` e views para listar utilizadores e mostrar o histórico de requisições por cidadão.
+- Navegação cruzada entre livros e cidadãos via histórico.
+
+
 ---
 
 ## 📂 Funcionalidades
@@ -101,6 +119,12 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 - Cifragem de dados sensíveis (`isbn`, `bibliografia`, `name` do utilizador).
 - Exportação de Livros para Excel.
 - Tema personalizável com DaisyUI.
+- Sistema de permissões com perfis Admin e Cidadão.
+- Requisição de livros com validações e limite por utilizador.
+- Histórico de requisições por livro e por cidadão.
+- Filtro por status nas requisições.
+- Indicadores estatísticos na página de requisições.
+- Navegação cruzada entre livros e cidadãos.
 
 ## 🎥 Vídeo de Apresentação
 O vídeo de demonstração do projeto pode ser visto aqui:  
