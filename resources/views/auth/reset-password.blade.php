@@ -1,36 +1,33 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+@extends('layouts.app')
 
-        <x-validation-errors class="mb-4" />
+@section('content')
+<div class="flex justify-center items-center min-h-[70vh]">
+    <div class="w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4">🔄 Redefinir Password</h2>
 
-        <form method="POST" action="{{ route('password.update') }}">
+        <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
             @csrf
-
             <input type="hidden" name="token" value="{{ $request->route('token') }}">
 
-            <div class="block">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email', $request->email)" required autofocus autocomplete="username" />
+            <div>
+                <label for="email" class="block font-semibold">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email', $request->email) }}" required class="input input-bordered w-full">
+                @error('email') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
             </div>
 
-            <div class="mt-4">
-                <x-label for="password" value="{{ __('Password') }}" />
-                <x-input id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
+            <div>
+                <label for="password" class="block font-semibold">Nova Password</label>
+                <input id="password" type="password" name="password" required class="input input-bordered w-full">
+                @error('password') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
             </div>
 
-            <div class="mt-4">
-                <x-label for="password_confirmation" value="{{ __('Confirm Password') }}" />
-                <x-input id="password_confirmation" class="block mt-1 w-full" type="password" name="password_confirmation" required autocomplete="new-password" />
+            <div>
+                <label for="password_confirmation" class="block font-semibold">Confirmar Password</label>
+                <input id="password_confirmation" type="password" name="password_confirmation" required class="input input-bordered w-full">
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <x-button>
-                    {{ __('Reset Password') }}
-                </x-button>
-            </div>
+            <button type="submit" class="btn btn-primary w-full">Guardar nova password</button>
         </form>
-    </x-authentication-card>
-</x-guest-layout>
+    </div>
+</div>
+@endsection

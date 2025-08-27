@@ -1,34 +1,28 @@
-<x-guest-layout>
-    <x-authentication-card>
-        <x-slot name="logo">
-            <x-authentication-card-logo />
-        </x-slot>
+@extends('layouts.app')
 
-        <div class="mb-4 text-sm text-gray-600">
-            {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-        </div>
+@section('content')
+<div class="flex justify-center items-center min-h-[70vh]">
+    <div class="w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4">🔑 Recuperar Password</h2>
 
-        @session('status')
-            <div class="mb-4 font-medium text-sm text-green-600">
-                {{ $value }}
-            </div>
-        @endsession
+        <p class="mb-4 text-sm text-gray-600">
+            Esqueceu-se da sua password? Indique o email e enviaremos um link para redefinir.
+        </p>
 
-        <x-validation-errors class="mb-4" />
+        @if (session('status'))
+            <div class="alert alert-success mb-4">{{ session('status') }}</div>
+        @endif
 
-        <form method="POST" action="{{ route('password.email') }}">
+        <form method="POST" action="{{ route('password.email') }}" class="space-y-4">
             @csrf
-
-            <div class="block">
-                <x-label for="email" value="{{ __('Email') }}" />
-                <x-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autofocus autocomplete="username" />
+            <div>
+                <label for="email" class="block font-semibold">Email</label>
+                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus class="input input-bordered w-full">
+                @error('email') <p class="text-red-500 text-sm">{{ $message }}</p> @enderror
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <x-button>
-                    {{ __('Email Password Reset Link') }}
-                </x-button>
-            </div>
+            <button type="submit" class="btn btn-primary w-full">Enviar link de recuperação</button>
         </form>
-    </x-authentication-card>
-</x-guest-layout>
+    </div>
+</div>
+@endsection

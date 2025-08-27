@@ -39,31 +39,36 @@
             <th>Início</th>
             <th>Fim Previsto</th>
             <th>Status</th>
-            <th>Ações</th>
+            @if(auth()->user()->isAdmin())
+                <th>Ações</th>
+            @endif
         </tr>
     </thead>
     <tbody>
         @foreach($requisicoes as $req)
         <tr>
             <td>{{ $req->numero_sequencial }}</td>
-            <td>{{ $req->livro->nome }}</td>
+            <td>{{ $req->livro->nome ?? 'Removido' }}</td>
             <td>
-                <a href="{{ route('users.show', $req->cidadao) }}" class="link link-primary">{{ $req->cidadao->name }}</a>
+                @if($req->cidadao)
+                    <a href="{{ route('users.show', $req->cidadao) }}" class="link link-primary">{{ $req->cidadao->name }}</a>
+                @else
+                    <span class="text-gray-500 italic">Removido</span>
+                @endif
             </td>
             <td>{{ $req->data_inicio }}</td>
             <td>{{ $req->data_fim_prevista }}</td>
             <td>{{ ucfirst($req->status) }}</td>
-            <td class="flex gap-2">
-                <a href="{{ route('requisicoes.show', $req) }}" class="btn btn-sm btn-info">👁️ Ver</a>
-                @if(auth()->user()->isAdmin())
+            @if(auth()->user()->isAdmin())
+                <td class="flex gap-2">
                     <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
                     <form action="{{ route('requisicoes.destroy', $req) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-sm btn-error">🗑️ Apagar</button>
                     </form>
-                @endif
-            </td>
+                </td>
+            @endif
         </tr>
         @endforeach
     </tbody>

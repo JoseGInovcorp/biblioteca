@@ -24,18 +24,34 @@ class RequisicaoController extends Controller
             $query->where('status', $status);
         }
 
+        // 📊 Indicadores
+        $totalAtivas = Requisicao::where('status', 'ativa')->count();
+        $ultimos30Dias = Requisicao::where('created_at', '>=', now()->subDays(30))->count();
+        $entreguesHoje = Requisicao::where('status', 'entregue')
+            ->whereDate('data_fim_real', now()->toDateString())
+            ->count();
+
         $requisicoes = $query->paginate(10)->withQueryString();
 
-        return view('pages.requisicoes.index', compact('requisicoes', 'status'));
+        return view('pages.requisicoes.index', compact(
+            'requisicoes',
+            'status',
+            'totalAtivas',
+            'ultimos30Dias',
+            'entreguesHoje'
+        ));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $livrosDisponiveis = Livro::whereDoesntHave('requisicoes', function ($query) {
             $query->where('status', 'ativa');
         })->get();
 
-        return view('pages.requisicoes.create', compact('livrosDisponiveis'));
+        // ID do livro vindo da query string (se existir)
+        $livroSelecionado = $request->query('livro_id');
+
+        return view('pages.requisicoes.create', compact('livrosDisponiveis', 'livroSelecionado'));
     }
 
     public function store(Request $request)

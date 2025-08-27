@@ -60,5 +60,5 @@ Route::middleware([
     })->name('dashboard');
 
     Route::resource('livros', LivroController::class);
-    Route::resource('users', UserController::class)->only(['index', 'show']);
+    Route::resource('users', UserController::class)->only(['index', 'show', 'create', 'store']);
 });

@@ -22,11 +22,12 @@
     <div>
         <label class="block mb-1">Livro</label>
         <select name="livro_id" class="select select-bordered w-full" required>
-            <option value="">Selecione um livro</option>
+            <option value="">-- Escolhe um livro --</option>
             @foreach($livrosDisponiveis as $livro)
-                <option value="{{ $livro->id }}" @selected(old('livro_id') == $livro->id)>
-                    {{ $livro->nome }}
-                </option>
+            <option value="{{ $livro->id }}" 
+            @if(isset($livroSelecionado) && $livroSelecionado == $livro->id) selected @endif>
+            {{ $livro->nome }}
+            </option>
             @endforeach
         </select>
     </div>

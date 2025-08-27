@@ -1,105 +1,56 @@
 @extends('layouts.app')
 
 @section('content')
-<h2 class="text-2xl font-bold mb-4">📘 Lista de Livros</h2>
+<h2 class="text-2xl font-bold mb-4">📚 Lista de Livros</h2>
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
-
-@auth
-    @if(auth()->user()->isAdmin())
-        <a href="{{ route('livros.create') }}" class="btn btn-success mb-4">➕ Criar Livro</a>
-    @endif
-@endauth
-
-<form method="GET" class="flex flex-wrap gap-2 mb-4">
-    <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar..." class="input input-bordered" />
-    <select name="editora_id" class="select select-bordered">
-        <option value="">Todas as Editoras</option>
-        @foreach($editoras as $editora)
-            <option value="{{ $editora->id }}" @selected(request('editora_id') == $editora->id)>{{ $editora->nome }}</option>
-        @endforeach
-    </select>
-    <select name="autor_id" class="select select-bordered">
-        <option value="">Todos os Autores</option>
-        @foreach($autores as $autor)
-            <option value="{{ $autor->id }}" @selected(request('autor_id') == $autor->id)>{{ $autor->nome }}</option>
-        @endforeach
-    </select>
-    <button class="btn btn-primary">Filtrar</button>
-
-    @auth
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('livros.exportar') }}" class="btn btn-accent">Exportar Excel</a>
-        @endif
-    @endauth
-</form>
 
 <table class="table table-zebra w-full">
     <thead>
         <tr>
-            <th>Capa</th>
-            <th>
-                <a href="?sort=nome&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
-                    Nome
-                    @if($sort === 'nome')
-                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
-                    @endif
-                </a>
-            </th>
-            <th>
-                <a href="?sort=isbn&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
-                    ISBN
-                    @if($sort === 'isbn')
-                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
-                    @endif
-                </a>
-            </th>
+            <th>Nome</th>
             <th>Editora</th>
             <th>Autores</th>
-            <th>
-                <a href="?sort=preco&direction={{ $direction === 'asc' ? 'desc' : 'asc' }}">
-                    Preço
-                    @if($sort === 'preco')
-                        {!! $direction === 'asc' ? '&uarr;' : '&darr;' !!}
-                    @endif
-                </a>
-            </th>
+            <th>Preço</th>
+            <th>Disponibilidade</th>
             <th>Ações</th>
         </tr>
     </thead>
     <tbody>
         @foreach($livros as $livro)
+        @php
+            $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
+        @endphp
         <tr>
+            <td>{{ $livro->nome }}</td>
+            <td>{{ $livro->editora->nome }}</td>
             <td>
-                @if($livro->imagem_capa)
-                    <a href="{{ asset('storage/'.$livro->imagem_capa) }}" target="_blank">
-                        <img src="{{ asset('storage/'.$livro->imagem_capa) }}" alt="Capa" class="w-12 h-16 object-cover hover:opacity-80 transition">
-                    </a>
+                @foreach($livro->autores as $autor)
+                    {{ $autor->nome }}@if(!$loop->last), @endif
+                @endforeach
+            </td>
+            <td>€{{ number_format($livro->preco, 2, ',', '.') }}</td>
+            <td>
+                @if($disponivel)
+                    <span class="badge badge-success">✅ Disponível</span>
                 @else
-                    —
+                    <span class="badge badge-error">❌ Indisponível</span>
                 @endif
             </td>
-            <td>{{ $livro->nome }}</td>
-            <td>{{ $livro->isbn }}</td>
-            <td>{{ $livro->editora->nome ?? '—' }}</td>
-            <td>{{ $livro->autores->pluck('nome')->implode(', ') }}</td>
-            <td>{{ number_format($livro->preco, 2, ',', '.') }} €</td>
             <td class="flex gap-2">
-    {{-- Botão para ver detalhe do livro (todos podem ver) --}}
-    <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+                <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
 
-    @auth
-        @if(auth()->user()->isAdmin())
-            <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-            <form action="{{ route('livros.destroy', $livro) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
-                @csrf
-                @method('DELETE')
-                <button class="btn btn-sm btn-error">🗑️ Apagar</button>
-            </form>
-        @endif
-    @endauth
-</td>
-
+                @auth
+                    @if(auth()->user()->isCidadao())
+                        @if($disponivel)
+                            <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
+                               class="btn btn-sm btn-success">📦 Requisitar</a>
+                        @else
+                            <button class="btn btn-sm btn-disabled" disabled>📦 Indisponível</button>
+                        @endif
+                    @endif
+                @endauth
+            </td>
         </tr>
         @endforeach
     </tbody>

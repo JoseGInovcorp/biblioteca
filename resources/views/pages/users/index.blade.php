@@ -5,6 +5,11 @@
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
+{{-- Botão apenas para Admins --}}
+@if(auth()->user()->isAdmin())
+    <a href="{{ route('users.create') }}" class="btn btn-success mb-4">➕ Novo Utilizador</a>
+@endif
+
 <table class="table table-zebra w-full">
     <thead>
         <tr>

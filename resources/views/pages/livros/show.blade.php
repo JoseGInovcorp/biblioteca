@@ -5,6 +5,10 @@
 
 <a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
+@php
+    $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
+@endphp
+
 <div class="mb-4">
     <p><strong>ISBN:</strong> {{ $livro->isbn }}</p>
     <p><strong>Editora:</strong> {{ $livro->editora->nome }}</p>
@@ -14,6 +18,27 @@
         @endforeach
     </p>
     <p><strong>Preço:</strong> €{{ number_format($livro->preco, 2, ',', '.') }}</p>
+
+    {{-- Estado de disponibilidade --}}
+    <p><strong>Disponibilidade:</strong>
+        @if($disponivel)
+            <span class="badge badge-success">✅ Disponível</span>
+        @else
+            <span class="badge badge-error">❌ Indisponível</span>
+        @endif
+    </p>
+
+    {{-- Botão requisitar (apenas cidadãos e se disponível) --}}
+    @auth
+        @if(auth()->user()->isCidadao())
+            @if($disponivel)
+                <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}" class="btn btn-success mt-2">📦 Requisitar</a>
+            @else
+                <button class="btn btn-disabled mt-2" disabled>📦 Indisponível</button>
+            @endif
+        @endif
+    @endauth
+
     @if($livro->imagem_capa)
         <div class="mt-2">
             <img src="{{ asset('storage/'.$livro->imagem_capa) }}" alt="Capa do livro" class="w-32 h-auto">
