@@ -138,6 +138,49 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
     -   Personalização estendida a reset de password, verificação de email e autenticação 2FA
     -   Garantido que registos públicos criam sempre `role = cidadao`
 
+### Dia 6
+
+-   Reconfiguração do ambiente de desenvolvimento num novo portátil.
+-   Implementado sistema de permissões com dois perfis: **Admin** e **Cidadão**.
+-   Criado menu “📦 Requisições” acessível a ambos os perfis.
+-   Validação de disponibilidade de livros antes da requisição.
+-   Limite de 3 requisições ativas por cidadão.
+-   Requisição regista foto do cidadão, data de início e fim prevista (+5 dias).
+-   Admin pode confirmar entrega e registar data real.
+-   Filtro por status na listagem de requisições.
+-   Indicadores no topo da página de requisições:
+    -   Total de requisições ativas
+    -   Requisições nos últimos 30 dias
+    -   Livros entregues hoje
+-   Histórico de requisições visível no detalhe de cada livro.
+-   Criado `UserController` e views para listar utilizadores e mostrar o histórico de requisições por cidadão.
+-   Navegação cruzada entre livros e cidadãos via histórico.
+
+### Dia 7
+
+-   Indicadores no topo da página de Requisições:
+    -   Total de requisições ativas
+    -   Requisições nos últimos 30 dias
+    -   Livros entregues hoje
+-   Gestão de Utilizadores:
+    -   Criado fluxo protegido para criar novos utilizadores (Admin ou Cidadão) via painel
+    -   Apenas Admins podem criar outros Admins
+    -   Adicionada view e formulário `create.blade.php`
+    -   Botão “➕ Novo Utilizador” visível apenas para Admins na listagem
+-   Catálogo de Livros:
+    -   Mostra estado de disponibilidade (“✅ Disponível” / “❌ Indisponível”)
+    -   Botão 📦 Requisitar ativo apenas para Cidadãos e quando disponível
+    -   Alterações aplicadas na listagem e no detalhe do livro
+-   Fluxo de Requisição:
+    -   Pré-seleção automática do livro ao clicar em “Requisitar” no catálogo/detalhe
+    -   Removido botão “Ver” da lista de requisições por não ser requisito e não exibir informação relevante
+-   Autenticação & Layout:
+    -   Unificação de layout (`layouts.app`) para páginas de login, registo e recuperação de password
+    -   Formulários centralizados na página
+    -   Adicionado link “Criar conta de Cidadão” no login
+    -   Personalização estendida a reset de password, verificação de email e autenticação 2FA
+    -   Garantido que registos públicos criam sempre `role = cidadao`
+
 ---
 
 ## 📂 Funcionalidades
@@ -150,6 +193,12 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Cifragem de dados sensíveis (`isbn`, `bibliografia`, `name` do utilizador).
 -   Exportação de Livros para Excel.
 -   Tema personalizável com DaisyUI.
+-   Sistema de permissões com perfis Admin e Cidadão.
+-   Requisição de livros com validações e limite por utilizador.
+-   Histórico de requisições por livro e por cidadão.
+-   Filtro por status nas requisições.
+-   Indicadores estatísticos na página de requisições.
+-   Navegação cruzada entre livros e cidadãos.
 
 ## 🎥 Vídeo de Apresentação
 
