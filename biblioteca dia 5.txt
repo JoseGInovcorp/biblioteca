@@ -1,0 +1,14 @@
+biblioteca dia 5:
+
+-> criados controllers para livros, editoras e autores;
+-> criados view Blade para listar livros, editoras e autores;
+-> atualizadas rotas;
+-> feita ligação para storage publico do upload das fotos das capas, autores e editoras;
+-> criado formulário para input desses ficheiros;
+-> gerada validação e armazenamento no respetivo controller;
+-> atualizadas views para permitirem criar, editar e eliminar livros, editoras e autores através de formulário;
+-> atualizadas rotas;
+-> testado CRUD para livros, acrescentada a visualização do campo capa_livro que anteriormente não estava presente, assim como a possibilidade de abrir a imagem em tamanho real;
+
+	Quetzal Editores
+	José Luis Peixoto

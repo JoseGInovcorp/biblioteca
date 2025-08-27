@@ -4,7 +4,12 @@
 <h2 class="text-2xl font-bold mb-4">📘 Lista de Livros</h2>
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
-<a href="{{ route('livros.create') }}" class="btn btn-success mb-4">➕ Criar Livro</a>
+
+@auth
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('livros.create') }}" class="btn btn-success mb-4">➕ Criar Livro</a>
+    @endif
+@endauth
 
 <form method="GET" class="flex flex-wrap gap-2 mb-4">
     <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar..." class="input input-bordered" />
@@ -21,7 +26,12 @@
         @endforeach
     </select>
     <button class="btn btn-primary">Filtrar</button>
-    <a href="{{ route('livros.exportar') }}" class="btn btn-accent">Exportar Excel</a>
+
+    @auth
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('livros.exportar') }}" class="btn btn-accent">Exportar Excel</a>
+        @endif
+    @endauth
 </form>
 
 <table class="table table-zebra w-full">
@@ -75,13 +85,21 @@
             <td>{{ $livro->autores->pluck('nome')->implode(', ') }}</td>
             <td>{{ number_format($livro->preco, 2, ',', '.') }} €</td>
             <td class="flex gap-2">
-                <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                <form action="{{ route('livros.destroy', $livro) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-sm btn-error">🗑️ Apagar</button>
-                </form>
-            </td>
+    {{-- Botão para ver detalhe do livro (todos podem ver) --}}
+    <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+
+    @auth
+        @if(auth()->user()->isAdmin())
+            <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+            <form action="{{ route('livros.destroy', $livro) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
+                @csrf
+                @method('DELETE')
+                <button class="btn btn-sm btn-error">🗑️ Apagar</button>
+            </form>
+        @endif
+    @endauth
+</td>
+
         </tr>
         @endforeach
     </tbody>

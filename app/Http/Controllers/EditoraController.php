@@ -27,11 +27,19 @@ class EditoraController extends Controller
 
     public function create()
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.editoras.create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'logotipo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -48,11 +56,19 @@ class EditoraController extends Controller
 
     public function edit(Editora $editora)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.editoras.edit', compact('editora'));
     }
 
     public function update(Request $request, Editora $editora)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'logotipo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -72,6 +88,10 @@ class EditoraController extends Controller
 
     public function destroy(Editora $editora)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         if ($editora->logotipo) {
             Storage::disk('public')->delete($editora->logotipo);
         }

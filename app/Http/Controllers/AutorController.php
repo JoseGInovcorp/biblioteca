@@ -27,11 +27,19 @@ class AutorController extends Controller
 
     public function create()
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.autores.create');
     }
 
     public function store(Request $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -48,11 +56,19 @@ class AutorController extends Controller
 
     public function edit(Autor $autor)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.autores.edit', compact('autor'));
     }
 
     public function update(Request $request, Autor $autor)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -72,6 +88,10 @@ class AutorController extends Controller
 
     public function destroy(Autor $autor)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         if ($autor->foto) {
             Storage::disk('public')->delete($autor->foto);
         }

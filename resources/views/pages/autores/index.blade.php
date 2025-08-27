@@ -4,7 +4,12 @@
 <h2 class="text-2xl font-bold mb-4">👤 Lista de Autores</h2>
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
-<a href="{{ route('autores.create') }}" class="btn btn-success mb-4">➕ Criar Autor</a>
+
+@auth
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('autores.create') }}" class="btn btn-success mb-4">➕ Criar Autor</a>
+    @endif
+@endauth
 
 <form method="GET" class="flex gap-2 mb-4">
     <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar autor..." class="input input-bordered" />
@@ -35,12 +40,16 @@
             <td>{{ $autor->nome }}</td>
             <td>{{ $autor->livros_count }}</td>
             <td class="flex gap-2">
-                <a href="{{ route('autores.edit', $autor) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                <form action="{{ route('autores.destroy', $autor) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-sm btn-error">🗑️ Apagar</button>
-                </form>
+                @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('autores.edit', $autor) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                        <form action="{{ route('autores.destroy', $autor) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-error">🗑️ Apagar</button>
+                        </form>
+                    @endif
+                @endauth
             </td>
         </tr>
         @endforeach

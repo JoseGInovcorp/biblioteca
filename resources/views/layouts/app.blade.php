@@ -13,16 +13,15 @@
     <h1 class="text-2xl font-bold text-primary">📚 Biblioteca</h1>
 
     @auth
-    <div class="flex items-center gap-2">
-        <a href="{{ route('profile.show') }}" class="btn btn-sm btn-outline">Perfil</a>
-        <span class="text-sm">Olá, {{ Auth::user()->name }}</span>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button class="btn btn-sm btn-outline btn-error">Sair</button>
-        </form>
-    </div>
-@endauth
-
+        <div class="flex items-center gap-2">
+            <a href="{{ route('profile.show') }}" class="btn btn-sm btn-outline">Perfil</a>
+            <span class="text-sm">Olá, {{ Auth::user()->name }}</span>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="btn btn-sm btn-outline btn-error">Sair</button>
+            </form>
+        </div>
+    @endauth
 
     @guest
         <div class="flex gap-2">
@@ -31,6 +30,7 @@
         </div>
     @endguest
 </header>
+
 
 <main class="flex-grow container mx-auto p-4">
     @yield('content')

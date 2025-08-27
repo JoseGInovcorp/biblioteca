@@ -30,4 +30,9 @@ class Livro extends Model
     {
         return $this->belongsTo(Editora::class);
     }
+
+    public function requisicoes()
+    {
+        return $this->hasMany(Requisicao::class);
+    }
 }

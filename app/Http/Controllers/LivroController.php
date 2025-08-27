@@ -51,6 +51,10 @@ class LivroController extends Controller
 
     public function create()
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.livros.create', [
             'editoras' => Editora::all(),
             'autores' => Autor::all(),
@@ -59,6 +63,10 @@ class LivroController extends Controller
 
     public function store(Request $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'isbn' => 'required|string|max:255|unique:livros',
@@ -83,8 +91,21 @@ class LivroController extends Controller
         return redirect()->route('livros.index')->with('success', 'Livro criado com sucesso!');
     }
 
+    public function show(Livro $livro)
+    {
+        // Carrega editora, autores e todas as requisições com o cidadão associado
+        $livro->load(['editora', 'autores', 'requisicoes.cidadao']);
+
+        return view('pages.livros.show', compact('livro'));
+    }
+
+
     public function edit(Livro $livro)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         return view('pages.livros.edit', [
             'livro' => $livro,
             'editoras' => Editora::all(),
@@ -94,6 +115,10 @@ class LivroController extends Controller
 
     public function update(Request $request, Livro $livro)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'isbn' => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
@@ -123,6 +148,10 @@ class LivroController extends Controller
 
     public function destroy(Livro $livro)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Acesso negado.');
+        }
+
         if ($livro->imagem_capa) {
             Storage::disk('public')->delete($livro->imagem_capa);
         }

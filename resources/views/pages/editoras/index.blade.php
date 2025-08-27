@@ -4,7 +4,12 @@
 <h2 class="text-2xl font-bold mb-4">🏢 Lista de Editoras</h2>
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
-<a href="{{ route('editoras.create') }}" class="btn btn-success mb-4">➕ Criar Editora</a>
+
+@auth
+    @if(auth()->user()->isAdmin())
+        <a href="{{ route('editoras.create') }}" class="btn btn-success mb-4">➕ Criar Editora</a>
+    @endif
+@endauth
 
 <form method="GET" class="flex gap-2 mb-4">
     <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar editora..." class="input input-bordered" />
@@ -35,12 +40,16 @@
             <td>{{ $editora->nome }}</td>
             <td>{{ $editora->livros_count }}</td>
             <td class="flex gap-2">
-                <a href="{{ route('editoras.edit', $editora) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-                <form action="{{ route('editoras.destroy', $editora) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-sm btn-error">🗑️ Apagar</button>
-                </form>
+                @auth
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('editoras.edit', $editora) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                        <form action="{{ route('editoras.destroy', $editora) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-error">🗑️ Apagar</button>
+                        </form>
+                    @endif
+                @endauth
             </td>
         </tr>
         @endforeach
