@@ -211,6 +211,6 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 ## 🎥 Vídeo de Apresentação
 
 O vídeo de demonstração do projeto pode ser visto aqui:  
-[📺 Ver vídeo no Google Drive](https://drive.google.com/file/d/1sqUylRn32b3t0sHrZI0jN22yGXUuAsDD/view?usp=sharing)
+[📺 Ver vídeo relativo à primeira semana no Google Drive](https://drive.google.com/file/d/1sqUylRn32b3t0sHrZI0jN22yGXUuAsDD/view?usp=sharing)
 
 Desenvolvido por José G. durante estágio na InovCorp.
