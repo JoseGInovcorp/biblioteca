@@ -3,7 +3,12 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">👤 Detalhes do Cidadão</h2>
 
-<a href="{{ route('users.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
+@php
+    $isAdmin = auth()->check() && auth()->user()->isAdmin();
+@endphp
+
+<a href="{{ $isAdmin ? route('users.index') : route('requisicoes.index') }}"
+   class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
 <div class="mb-4">
     <p><strong>Nome:</strong> {{ $user->name }}</p>
@@ -20,9 +25,10 @@
         <thead>
             <tr>
                 <th>#</th>
+                <th>Capa</th>
                 <th>Livro</th>
                 <th>Início</th>
-                <th>Fim Prevista</th>
+                <th>Fim Previsto</th>
                 <th>Fim Real</th>
                 <th>Status</th>
             </tr>
@@ -31,6 +37,17 @@
             @foreach($user->requisicoes as $req)
                 <tr>
                     <td>{{ $req->numero_sequencial }}</td>
+                    <td>
+                        @if($req->livro && $req->livro->imagem_capa)
+                            <a href="{{ asset('storage/' . $req->livro->imagem_capa) }}" target="_blank">
+                                <img src="{{ asset('storage/' . $req->livro->imagem_capa) }}"
+                                    alt="Capa de {{ $req->livro->nome }}"
+                                    class="w-12 h-16 object-cover rounded shadow">
+                            </a>
+                        @else
+                            <span class="text-gray-400 italic">Sem capa</span>
+                        @endif
+                    </td>
                     <td>
                         @if($req->livro)
                             <a href="{{ route('livros.show', $req->livro) }}" class="link link-primary">

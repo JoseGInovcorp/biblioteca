@@ -10,20 +10,30 @@ class UserController extends Controller
 {
     public function index()
     {
+        // Apenas Admin pode aceder à lista de utilizadores
+        abort_unless(auth()->check() && auth()->user()->isAdmin(), 403);
+
         $users = User::paginate(10);
         return view('pages.users.index', compact('users'));
     }
 
     public function show(User $user)
     {
-        $user->load(['requisicoes.livro']);
+        $auth = auth()->user();
+
+        // Apenas Admin pode ver outros; Cidadão só vê o próprio
+        abort_unless($auth && ($auth->isAdmin() || $auth->id === $user->id), 403);
+
+        $user->load(['requisicoes' => function ($q) {
+            $q->with('livro')->latest();
+        }]);
+
         return view('pages.users.show', compact('user'));
     }
 
     public function create()
     {
         abort_if(!auth()->user()->isAdmin(), 403); // só Admin pode aceder
-
         return view('pages.users.create');
     }
 

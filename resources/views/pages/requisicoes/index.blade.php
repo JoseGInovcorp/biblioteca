@@ -3,6 +3,29 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">📦 Lista de Requisições</h2>
 
+@if(auth()->user()->isAdmin())
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="card bg-base-100 shadow-md text-center">
+            <div class="card-body p-4">
+                <h3 class="font-bold text-lg">Requisições Ativas</h3>
+                <p class="text-3xl font-extrabold text-primary">{{ $totalAtivas }}</p>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-md text-center">
+            <div class="card-body p-4">
+                <h3 class="font-bold text-lg">Últimos 30 dias</h3>
+                <p class="text-3xl font-extrabold text-primary">{{ $ultimos30Dias }}</p>
+            </div>
+        </div>
+        <div class="card bg-base-100 shadow-md text-center">
+            <div class="card-body p-4">
+                <h3 class="font-bold text-lg">Livros entregues hoje</h3>
+                <p class="text-3xl font-extrabold text-primary">{{ $entreguesHoje }}</p>
+            </div>
+        </div>
+    </div>
+@endif
+
 @if($errors->any())
     <div class="alert alert-error mb-4">
         <ul class="list-disc pl-5">
@@ -16,9 +39,7 @@
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
 @auth
-    @if(!auth()->user()->isAdmin())
-        <a href="{{ route('requisicoes.create') }}" class="btn btn-success mb-4">➕ Nova Requisição</a>
-    @endif
+    <a href="{{ route('requisicoes.create') }}" class="btn btn-success mb-4">➕ Nova Requisição</a>
 @endauth
 
 <form method="GET" action="{{ route('requisicoes.index') }}" class="mb-4 flex items-center gap-4">
@@ -61,7 +82,7 @@
             <td>{{ ucfirst($req->status) }}</td>
             @if(auth()->user()->isAdmin())
                 <td class="flex gap-2">
-                    <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                    <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
                     <form action="{{ route('requisicoes.destroy', $req) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
                         @csrf
                         @method('DELETE')

@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Requisicao;
-use App\Models\Livro;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
+use App\Models\Livro;
+use App\Models\Requisicao;
+use App\Models\User;
+use App\Mail\RequisicaoCriada;
 
 class RequisicaoController extends Controller
 {
@@ -48,28 +52,64 @@ class RequisicaoController extends Controller
             $query->where('status', 'ativa');
         })->get();
 
-        // ID do livro vindo da query string (se existir)
         $livroSelecionado = $request->query('livro_id');
 
-        return view('pages.requisicoes.create', compact('livrosDisponiveis', 'livroSelecionado'));
+        $cidadaos = [];
+        if (auth()->user()->isAdmin()) {
+            $cidadaos = User::where('role', 'cidadao')->orderBy('name')->get();
+        }
+
+        return view('pages.requisicoes.create', compact('livrosDisponiveis', 'livroSelecionado', 'cidadaos'));
     }
 
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        $ativas = $user->requisicoes()->where('status', 'ativa')->count();
-        if ($ativas >= 3) {
+        // Validação base
+        $rules = [
+            'livro_id' => 'required|exists:livros,id',
+            'foto_cidadao' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ];
+
+        // Valida cidadão se for Admin
+        if ($user->isAdmin()) {
+            $rules['cidadao_id'] = [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(function ($q) {
+                    $q->where('role', 'cidadao');
+                })
+            ];
+        }
+
+        $validated = $request->validate($rules);
+
+        // Determinar cidadão alvo
+        $cidadaoId = $user->isAdmin() ? (int) $request->input('cidadao_id') : $user->id;
+
+        // Limite de 3 requisições ativas
+        $ativasCidadao = Requisicao::where('cidadao_id', $cidadaoId)
+            ->where('status', 'ativa')
+            ->count();
+
+        if ($ativasCidadao >= 3) {
+            $cidadaoNome = optional(User::find($cidadaoId))->name;
+            $mensagem = $cidadaoNome
+                ? "O cidadão {$cidadaoNome} já tem 3 requisições ativas."
+                : "Este cidadão já tem 3 requisições ativas.";
+
             return redirect()
-                ->route('requisicoes.create')
-                ->withErrors(['limite' => 'Já tem 3 requisições ativas.'])
+                ->route('requisicoes.create', ['livro_id' => $request->livro_id])
+                ->withErrors(['cidadao_id' => $mensagem])
                 ->withInput();
         }
 
-        $livroId = $request->input('livro_id');
-        $livroEmUso = Requisicao::where('livro_id', $livroId)
+        // Validar disponibilidade do livro
+        $livroEmUso = Requisicao::where('livro_id', $request->livro_id)
             ->where('status', 'ativa')
             ->exists();
+
         if ($livroEmUso) {
             return redirect()
                 ->route('requisicoes.create')
@@ -77,12 +117,8 @@ class RequisicaoController extends Controller
                 ->withInput();
         }
 
-        $validated = $request->validate([
-            'livro_id' => 'required|exists:livros,id',
-            'foto_cidadao' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
-
-        $validated['cidadao_id'] = $user->id;
+        // Preencher campos
+        $validated['cidadao_id'] = $cidadaoId;
         $validated['data_inicio'] = now();
         $validated['data_fim_prevista'] = now()->addDays(5);
 
@@ -90,7 +126,19 @@ class RequisicaoController extends Controller
             $validated['foto_cidadao'] = $request->file('foto_cidadao')->store('cidadaos', 'public');
         }
 
-        Requisicao::create($validated);
+        // Criar requisição
+        $requisicao = Requisicao::create($validated);
+        $requisicao->loadMissing('livro', 'cidadao');
+
+        // 📧 Enviar email para cidadão
+        Mail::to($requisicao->cidadao->email)
+            ->send(new RequisicaoCriada($requisicao));
+
+        // 📧 Enviar email separado para cada admin
+        $admins = User::where('role', 'admin')->pluck('email')->all();
+        foreach ($admins as $adminEmail) {
+            Mail::to($adminEmail)->send(new RequisicaoCriada($requisicao));
+        }
 
         return redirect()
             ->route('requisicoes.index')
@@ -100,7 +148,6 @@ class RequisicaoController extends Controller
     public function show(Requisicao $requisicao)
     {
         $requisicao->loadMissing('livro', 'cidadao');
-
         return view('pages.requisicoes.show', compact('requisicao'));
     }
 

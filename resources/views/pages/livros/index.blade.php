@@ -8,6 +8,7 @@
 <table class="table table-zebra w-full">
     <thead>
         <tr>
+            <th>Capa</th>
             <th>Nome</th>
             <th>Editora</th>
             <th>Autores</th>
@@ -22,6 +23,19 @@
             $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
         @endphp
         <tr>
+            {{-- Coluna da capa --}}
+            <td>
+                @if($livro->imagem_capa)
+                    <a href="{{ asset('storage/' . $livro->imagem_capa) }}" target="_blank">
+                        <img src="{{ asset('storage/' . $livro->imagem_capa) }}"
+                            alt="Capa de {{ $livro->nome }}"
+                            class="w-16 h-24 object-cover rounded shadow">
+                    </a>
+                @else
+                    <span class="text-gray-400 italic">Sem capa</span>
+                @endif
+            </td>
+
             <td>{{ $livro->nome }}</td>
             <td>{{ $livro->editora->nome }}</td>
             <td>
@@ -37,19 +51,21 @@
                     <span class="badge badge-error">❌ Indisponível</span>
                 @endif
             </td>
-            <td class="flex gap-2">
-                <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+            <td class="min-w-[140px]">
+                <div class="flex gap-2 items-center">
+                    <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
 
-                @auth
-                    @if(auth()->user()->isCidadao())
-                        @if($disponivel)
-                            <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
-                               class="btn btn-sm btn-success">📦 Requisitar</a>
-                        @else
-                            <button class="btn btn-sm btn-disabled" disabled>📦 Indisponível</button>
+                    @auth
+                        @if(auth()->user()->isCidadao())
+                            @if($disponivel)
+                                <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
+                                class="btn btn-sm btn-success">📦 Requisitar</a>
+                            @else
+                                <button class="btn btn-sm btn-disabled" disabled>📦 Indisponível</button>
+                            @endif
                         @endif
-                    @endif
-                @endauth
+                    @endauth
+                </div>
             </td>
         </tr>
         @endforeach

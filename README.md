@@ -138,6 +138,57 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
     -   Personalização estendida a reset de password, verificação de email e autenticação 2FA
     -   Garantido que registos públicos criam sempre `role = cidadao`
 
+### Dia 8
+
+-   **Fluxo de criação de requisições**
+
+    -   Admin pode criar requisições para qualquer cidadão, escolhendo no formulário.
+    -   Aplicado o limite de 3 requisições ativas mesmo quando criadas por um Admin para outro cidadão, com mensagens de erro claras.
+    -   Página “Criar Requisição” atualizada para Admins com campo de seleção de cidadão e mensagens de erro junto aos campos.
+    -   Página Confirmar Devolução (antigo “Editar Requisição”) adaptada para registar devolução real e estado final.
+
+-   **Emails**
+
+    -   **Configuração de ambiente de desenvolvimento com MailHog** para pré‑visualização de emails:
+        ```env
+        MAIL_MAILER=smtp
+        MAIL_HOST=127.0.0.1
+        MAIL_PORT=1025
+        MAIL_USERNAME=null
+        MAIL_PASSWORD=null
+        MAIL_ENCRYPTION=null
+        MAIL_FROM_ADDRESS="no-reply@biblioteca.local"
+        MAIL_FROM_NAME="Biblioteca Municipal"
+        ```
+        MailHog acessível via [http://localhost:8025].
+    -   **Email de confirmação de requisição** (`RequisicaoCriada`):
+        -   Enviado automaticamente para o cidadão e para todos os Admins.
+        -   Inclui dados completos da requisição e capa do livro.
+    -   **Email de lembrete** (`RequisicaoLembrete`):
+        -   Enviado apenas ao cidadão, no dia anterior à data de entrega prevista.
+        -   Inclui capa do livro, corrigido para carregar corretamente no MailHog e clientes de email (ajuste de `APP_URL` e `php artisan storage:link`).
+        -   Lógica validada e testada via Tinker simulando datas de fim.
+    -   Views de email ajustadas para consistência visual entre confirmação e lembrete.
+
+-   **Agendamento**
+
+    -   Criado `app/Console/Kernel.php` para agendar `requisicoes:enviar-lembretes` diariamente às 09:00.
+    -   Testes de execução manual e via `php artisan schedule:work` para garantir funcionamento.
+
+-   **Indicadores para Admin**
+
+    -   Reimplementados no topo da listagem de requisições:
+        -   Total de requisições ativas.
+        -   Requisições nos últimos 30 dias.
+        -   Livros entregues hoje.
+    -   Visíveis apenas para utilizadores com perfil Admin.
+
+-   **Ajustes e polimento**
+    -   Detalhe do utilizador mostra histórico de requisições com numeração, capas e links para os livros.
+    -   Lista de livros com coluna de capa clicável para todos os perfis.
+    -   Corrigido alinhamento vertical dos botões na coluna “Ações” da lista de livros.
+    -   Protegido o acesso: cidadãos não acedem à lista de utilizadores (verificado que existia esse erro); botão “Voltar” no detalhe do utilizador ajusta‑se ao perfil.
+
 ---
 
 ## 📂 Funcionalidades
