@@ -82,7 +82,10 @@
             <td>{{ ucfirst($req->status) }}</td>
             @if(auth()->user()->isAdmin())
                 <td class="flex gap-2">
-                    <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
+                    @if($req->status === 'ativa')
+                        <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
+                    @endif
+                    
                     <form action="{{ route('requisicoes.destroy', $req) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">
                         @csrf
                         @method('DELETE')

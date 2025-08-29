@@ -93,8 +93,13 @@ class LivroController extends Controller
 
     public function show(Livro $livro)
     {
-        // Carrega editora, autores e todas as requisições com o cidadão associado
-        $livro->load(['editora', 'autores', 'requisicoes.cidadao']);
+        $livro->load(['editora', 'autores']);
+
+        if (auth()->user()->isAdmin()) {
+            $livro->load(['requisicoes.cidadao']);
+        } else {
+            $livro->setRelation('requisicoes', $livro->requisicoes()->where('cidadao_id', auth()->id())->with('cidadao')->get());
+        }
 
         return view('pages.livros.show', compact('livro'));
     }

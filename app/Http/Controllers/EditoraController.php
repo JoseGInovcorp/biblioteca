@@ -13,7 +13,7 @@ class EditoraController extends Controller
         $query = Editora::withCount('livros');
 
         if ($request->filled('q')) {
-            $query->where('nome', 'like', "%{$request->q}%");
+            $query->where('nome', 'like', '%' . $request->q . '%');
         }
 
         $sort = $request->get('sort', 'nome');
@@ -24,6 +24,7 @@ class EditoraController extends Controller
 
         return view('pages.editoras.index', compact('editoras', 'sort', 'direction'));
     }
+
 
     public function create()
     {

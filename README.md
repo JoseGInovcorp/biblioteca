@@ -113,7 +113,7 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Criado `UserController` e views para listar utilizadores e mostrar o histórico de requisições por cidadão.
 -   Navegação cruzada entre livros e cidadãos via histórico.
 
-### Dia 7
+### Dia 8
 
 -   Indicadores no topo da página de Requisições:
     -   Total de requisições ativas
@@ -138,7 +138,7 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
     -   Personalização estendida a reset de password, verificação de email e autenticação 2FA
     -   Garantido que registos públicos criam sempre `role = cidadao`
 
-### Dia 8
+### Dia 9
 
 -   **Fluxo de criação de requisições**
 
@@ -189,6 +189,51 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
     -   Corrigido alinhamento vertical dos botões na coluna “Ações” da lista de livros.
     -   Protegido o acesso: cidadãos não acedem à lista de utilizadores (verificado que existia esse erro); botão “Voltar” no detalhe do utilizador ajusta‑se ao perfil.
 
+### Dia 10
+
+-   **Privacidade e permissões no histórico de requisições**
+
+    -   Ajustado o detalhe do livro para que:
+        -   Cidadãos vejam apenas as suas próprias requisições.
+        -   Admins continuem a ver todas as requisições associadas ao livro.
+    -   Lógica aplicada também ao histórico no detalhe do cidadão.
+
+-   **Pesquisa e ordenação**
+
+    -   Corrigida pesquisa por ISBN:
+        -   Removida cifragem do campo `isbn` no modelo `Livro`.
+        -   Atualização manual dos valores via TablePlus.
+        -   Pesquisa agrupada por nome/ISBN no controller.
+    -   Adicionados filtros e ordenação nas páginas de Autores e Editoras.
+    -   Reimplementado botão “➕ Criar Livro” na listagem, visível apenas para Admins.
+
+-   **MailHog e testes de email**
+
+    -   MailHog instalado e configurado localmente via `mailhog_windows_amd64.exe`.
+    -   Testes de envio de email de confirmação e lembrete validados com sucesso.
+    -   Email de lembrete disparado manualmente via:
+        ```bash
+        php artisan requisicoes:enviar-lembretes
+        ```
+    -   Interface de MailHog acessível via [http://localhost:8025](http://localhost:8025).
+
+-   **Ajustes na interface**
+
+    -   Botão “📥 Receber Livro” na listagem de requisições só aparece quando o status é “ativa”.
+    -   Corrigido comportamento da listagem de livros e requisições para respeitar o perfil do utilizador.
+    -   Indicadores no topo da página de requisições mantêm-se visíveis apenas para Admins.
+
+-   **Preparação do vídeo de apresentação**
+    -   Criado roteiro de demonstração com os seguintes tópicos:
+        -   Registo e atribuição de perfis.
+        -   Criação e gestão de livros.
+        -   Requisição de livros com validações.
+        -   Confirmação de devolução por Admin.
+        -   Visualização de histórico por perfil.
+        -   Envio e receção de emails via MailHog.
+        -   Indicadores de gestão no menu de requisições.
+    -   Vídeo gravado e pronto para entrega na plataforma da empresa.
+
 ---
 
 ## 📂 Funcionalidades
@@ -210,7 +255,8 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 ## 🎥 Vídeo de Apresentação
 
-O vídeo de demonstração do projeto pode ser visto aqui:  
+O vídeo de demonstração do projeto pode ser visto aqui para cada semana:  
 [📺 Ver vídeo relativo à primeira semana no Google Drive](https://drive.google.com/file/d/1sqUylRn32b3t0sHrZI0jN22yGXUuAsDD/view?usp=sharing)
+[📺 Ver vídeo relativo à segunda semana no Google Drive](https://drive.google.com/file/d/1IzSi-GE5zXihuQ4H9PYxdq78vfYXtAPf/view?usp=sharing)
 
 Desenvolvido por José G. durante estágio na InovCorp.

@@ -5,16 +5,29 @@
 
 <a href="{{ route('home') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
+<form method="GET" action="{{ route('autores.index') }}" class="mb-6 flex flex-wrap gap-4 items-center">
+    <input type="text" name="q" value="{{ request('q') }}" placeholder="🔍 Pesquisar autor"
+        class="input input-bordered w-full md:w-1/3" />
+
+    <select name="sort" class="select select-bordered w-full md:w-1/4">
+        <option value="nome" @selected(request('sort') == 'nome')>Ordenar por Nome</option>
+        <option value="created_at" @selected(request('sort') == 'created_at')>Mais Recentes</option>
+    </select>
+
+    <select name="direction" class="select select-bordered w-full md:w-1/4">
+        <option value="asc" @selected(request('direction') == 'asc')>Ascendente</option>
+        <option value="desc" @selected(request('direction') == 'desc')>Descendente</option>
+    </select>
+
+    <button type="submit" class="btn btn-primary w-full md:w-auto">🔍 Filtrar</button>
+</form>
+
+
 @auth
     @if(auth()->user()->isAdmin())
         <a href="{{ route('autores.create') }}" class="btn btn-success mb-4">➕ Criar Autor</a>
     @endif
 @endauth
-
-<form method="GET" class="flex gap-2 mb-4">
-    <input type="text" name="q" value="{{ request('q') }}" placeholder="Pesquisar autor..." class="input input-bordered" />
-    <button class="btn btn-primary">Filtrar</button>
-</form>
 
 <table class="table table-zebra w-full">
     <thead>

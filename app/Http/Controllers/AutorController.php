@@ -13,7 +13,7 @@ class AutorController extends Controller
         $query = Autor::withCount('livros');
 
         if ($request->filled('q')) {
-            $query->where('nome', 'like', "%{$request->q}%");
+            $query->where('nome', 'like', '%' . $request->q . '%');
         }
 
         $sort = $request->get('sort', 'nome');
@@ -24,6 +24,7 @@ class AutorController extends Controller
 
         return view('pages.autores.index', compact('autores', 'sort', 'direction'));
     }
+
 
     public function create()
     {
