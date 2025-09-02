@@ -42,9 +42,13 @@
 </form>
 @auth
     @if(auth()->user()->isAdmin())
-        <a href="{{ route('livros.create') }}" class="btn btn-success mb-4">➕ Criar Livro</a>
+        <div class="flex gap-2 mb-4">
+            <a href="{{ route('livros.create') }}" class="btn btn-success">➕ Criar Livro</a>
+            <a href="{{ route('livros.exportar') }}" class="btn btn-outline btn-info">📤 Exportar para Excel</a>
+        </div>
     @endif
 @endauth
+
 
 <table class="table table-zebra w-full">
     <thead>

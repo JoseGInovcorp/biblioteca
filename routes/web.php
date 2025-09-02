@@ -10,6 +10,7 @@ use App\Http\Controllers\AutorController;
 use App\Http\Controllers\EditoraController;
 use App\Http\Controllers\RequisicaoController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\GoogleBooksController;
 use Maatwebsite\Excel\Facades\Excel;
 
 Route::middleware([
@@ -48,9 +49,8 @@ Route::middleware([
     Route::resource('requisicoes', RequisicaoController::class)
         ->parameters(['requisicoes' => 'requisicao']);
 
-
     /**
-     * 📤 Exportação de livros para Excel (verificação no controller ou aqui)
+     * 📤 Exportação de livros para Excel
      */
     Route::get('/exportar-livros', function () {
         if (!auth()->user()->isAdmin()) {
@@ -64,17 +64,30 @@ Route::middleware([
         return view('dashboard');
     })->name('dashboard');
 
-    Route::resource('livros', LivroController::class);
+    /**
+     * 👥 Utilizadores
+     */
     Route::resource('users', UserController::class)->only(['index', 'show', 'create', 'store']);
 
-    //Rota temporaria do email para teste
+    /**
+     * 📚 Integração Google Books API
+     */
+    Route::middleware('can:isAdmin')->group(function () {
+        Route::get('/google-books', [GoogleBooksController::class, 'index'])->name('google-books.index');
+        Route::get('/google-books/search', [GoogleBooksController::class, 'search'])->name('google-books.search');
+        Route::post('/google-books/import', [GoogleBooksController::class, 'import'])->name('google-books.import');
+    });
+
+    /**
+     * ✉️ Rota temporária para teste de email no MailHog
+     */
     Route::get('/teste-mailhog', function () {
-        $req = \App\Models\Requisicao::with('livro', 'cidadao')->latest()->first();
+        $req = Requisicao::with('livro', 'cidadao')->latest()->first();
         $admins = \App\Models\User::where('role', 'admin')->pluck('email')->all();
 
         Mail::to($req->cidadao->email)
             ->bcc($admins)
-            ->send(new \App\Mail\RequisicaoCriada($req));
+            ->send(new RequisicaoCriada($req));
 
         return 'Email enviado para o MailHog';
     });

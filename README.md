@@ -234,6 +234,26 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
         -   Indicadores de gestão no menu de requisições.
     -   Vídeo gravado e pronto para entrega na plataforma da empresa.
 
+### Dia 11 e 12 — Integração com Google Books API
+
+-   Ligação à [Google Books API](https://developers.google.com/books/docs/v1/getting_started) para pesquisa e importação de livros.
+-   Criado serviço `GoogleBooksService` com métodos:
+    -   `byIsbn()` — pesquisa por ISBN com fallback para título.
+    -   `searchByTitle()` — pesquisa por título com limite de resultados.
+    -   `mapVolumeToLivro()` — mapeia os dados da API para o formato da BD.
+-   Implementado cache de resultados para evitar chamadas repetidas.
+-   Criada interface de pesquisa com filtro por ISBN ou título.
+-   Resultados exibem capa, título, autores e editora.
+-   Botão “Importar” disponível apenas para livros com ISBN válido.
+-   Ao importar:
+    -   Cria ou atualiza livro na BD.
+    -   Cria ou associa autores e editora.
+    -   Faz download da capa e guarda em `storage/app/public/capas`.
+    -   Redireciona para a página do livro com mensagem de sucesso.
+-   Validação de dados e normalização de nomes para evitar duplicações.
+-   Proteção contra autores inválidos (ex.: nomes numéricos ou vazios).
+-   Funcionalidade acessível apenas a utilizadores com perfil Admin.
+
 ---
 
 ## 📂 Funcionalidades

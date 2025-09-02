@@ -40,10 +40,9 @@
     @endauth
 
     @if($livro->imagem_capa)
-        <div class="mt-2">
-            <img src="{{ asset('storage/'.$livro->imagem_capa) }}" alt="Capa do livro" class="w-32 h-auto">
-        </div>
+        <img src="{{ asset('storage/' . $livro->imagem_capa) }}" alt="Capa de {{ $livro->nome }}">
     @endif
+
 </div>
 
 <h3 class="text-xl font-semibold mt-6 mb-2">📚 Histórico de Requisições</h3>

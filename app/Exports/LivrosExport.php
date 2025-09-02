@@ -18,7 +18,7 @@ class LivrosExport implements FromCollection, WithHeadings
                 'Bibliografia' => $livro->bibliografia,
                 'Editora' => $livro->editora->nome ?? '—',
                 'Autores' => $livro->autores->pluck('nome')->implode(', '),
-                'Preço (€)' => $livro->preco,
+                'Preço (€)' => number_format($livro->preco, 2, ',', '.'),
             ];
         });
     }
@@ -28,4 +28,3 @@ class LivrosExport implements FromCollection, WithHeadings
         return ['ID', 'Nome', 'ISBN', 'Bibliografia', 'Editora', 'Autores', 'Preço (€)'];
     }
 }
-
