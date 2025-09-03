@@ -254,6 +254,27 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Proteção contra autores inválidos (ex.: nomes numéricos ou vazios).
 -   Funcionalidade acessível apenas a utilizadores com perfil Admin.
 
+### Dia 13 — Melhoria do fluxo de criação de livros com dados da Google Books API
+
+-   Formulário de criação de livros agora aceita preenchimento automático com dados vindos da Google Books API.
+-   Adicionados campos ocultos para:
+    -   `imagem_capa` — URL da capa sugerida pela API.
+    -   `editora_nome` — nome da editora sugerida.
+    -   `autores_nomes[]` — nomes dos autores sugeridos.
+-   Pré-visualização da capa exibida no formulário mesmo sem upload manual.
+-   No `LivroController@store`:
+    -   Download automático da capa via URL e armazenamento em `storage/app/public/capas`.
+    -   Criação dinâmica de autores e editora se não existirem.
+    -   Validação e fallback para editoras novas introduzidas manualmente (`nova_editora`).
+-   No `LivroController@update`:
+    -   Alinhamento da lógica de substituição da capa (upload ou URL).
+    -   Criação de nova editora se não selecionada.
+    -   Remoção da capa anterior ao atualizar.
+-   Views atualizadas para exibir corretamente a capa com `asset('storage/...')`.
+-   Proteção contra autores inválidos (ex.: nomes numéricos ou vazios).
+-   Testes realizados com livros com e sem editora vindos da API.
+-   Funcionalidade acessível apenas a utilizadores com perfil Admin.
+
 ---
 
 ## 📂 Funcionalidades

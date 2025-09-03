@@ -27,13 +27,11 @@ class GoogleBooksController extends Controller
         $fallbackUsed = false;
 
         if ($request->type === 'isbn') {
-            // Passa o mesmo valor como fallbackTitle por enquanto
             $volume = $gb->byIsbn($request->input('query'), $request->input('query'));
 
             if ($volume) {
                 $results[] = $gb->mapVolumeToLivro($volume);
 
-                // Se não tiver identificadores de ISBN, é porque veio do fallback
                 $ids = $volume['volumeInfo']['industryIdentifiers'] ?? [];
                 if (empty($ids)) {
                     $fallbackUsed = true;
@@ -54,6 +52,25 @@ class GoogleBooksController extends Controller
         ]);
     }
 
+    public function prefill(Request $request)
+    {
+        $request->validate([
+            'isbn' => 'required|string',
+        ]);
+
+        $volume = (new GoogleBooksService())->byIsbn($request->isbn);
+
+        if (!$volume) {
+            return redirect()->back()->with('error', 'Livro não encontrado na API.');
+        }
+
+        $dados = (new GoogleBooksService())->mapVolumeToLivro($volume);
+
+        return redirect()
+            ->route('livros.create')
+            ->withInput($dados);
+    }
+
     public function import(Request $request)
     {
         $request->validate([
@@ -66,12 +83,10 @@ class GoogleBooksController extends Controller
             'preco'         => 'nullable|numeric|min:0',
         ]);
 
-        // 1️⃣ Criar ou obter editora (fallback para "Editora Desconhecida")
         $editora = Editora::firstOrCreate([
             'nome' => $request->editora_nome ?: 'Editora Desconhecida'
         ]);
 
-        // 2️⃣ Guardar capa localmente (se existir)
         $caminhoCapa = null;
         if ($request->imagem_capa) {
             try {
@@ -85,7 +100,6 @@ class GoogleBooksController extends Controller
             }
         }
 
-        // 3️⃣ Criar ou atualizar livro
         $livro = Livro::updateOrCreate(
             ['isbn' => $request->isbn],
             [
@@ -97,24 +111,21 @@ class GoogleBooksController extends Controller
             ]
         );
 
-        // 4️⃣ Associar autores sem duplicar
         foreach ($request->autores_nomes ?? [] as $nomeAutor) {
             $nomeLimpo = trim(mb_strtolower($nomeAutor));
 
-            // 🔎 Validação básica do nome
             if (
-                empty($nomeLimpo) ||                             // vazio
-                is_numeric($nomeLimpo) ||                        // só números
-                !preg_match('/[a-z]/i', $nomeLimpo)              // não contém letras
+                empty($nomeLimpo) ||
+                is_numeric($nomeLimpo) ||
+                !preg_match('/[a-z]/i', $nomeLimpo)
             ) {
-                continue; // descarta nomes inválidos
+                continue;
             }
 
-            // 🔁 Verifica se já existe (normalizado)
             $autorExistente = Autor::whereRaw('LOWER(TRIM(nome)) = ?', [$nomeLimpo])->first();
 
             if (!$autorExistente) {
-                $autorExistente = Autor::create(['nome' => $nomeAutor]); // guarda com o nome original
+                $autorExistente = Autor::create(['nome' => $nomeAutor]);
             }
 
             $livro->autores()->syncWithoutDetaching([$autorExistente->id]);

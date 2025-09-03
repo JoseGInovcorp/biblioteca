@@ -55,18 +55,28 @@
                                 <td class="border px-2 py-1">{{ $livro['editora_nome'] ?? '' }}</td>
                                 <td class="border px-2 py-1">
                                     @if(!empty($livro['isbn']))
-                                        <form action="{{ route('google-books.import') }}" method="POST">
-                                            @csrf
-                                            <input type="hidden" name="isbn" value="{{ $livro['isbn'] }}">
-                                            <input type="hidden" name="nome" value="{{ $livro['nome'] }}">
-                                            <input type="hidden" name="bibliografia" value="{{ $livro['bibliografia'] }}">
-                                            <input type="hidden" name="imagem_capa" value="{{ $livro['imagem_capa'] }}">
-                                            <input type="hidden" name="editora_nome" value="{{ $livro['editora_nome'] }}">
-                                            @foreach(($livro['autores_nomes'] ?? []) as $autor)
-                                                <input type="hidden" name="autores_nomes[]" value="{{ $autor }}">
-                                            @endforeach
-                                            <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Importar</button>
-                                        </form>
+                                        <div class="flex gap-2">
+                                            {{-- Botão de importação direta --}}
+                                            <form action="{{ route('google-books.import') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="isbn" value="{{ $livro['isbn'] }}">
+                                                <input type="hidden" name="nome" value="{{ $livro['nome'] }}">
+                                                <input type="hidden" name="bibliografia" value="{{ $livro['bibliografia'] }}">
+                                                <input type="hidden" name="imagem_capa" value="{{ $livro['imagem_capa'] }}">
+                                                <input type="hidden" name="editora_nome" value="{{ $livro['editora_nome'] }}">
+                                                @foreach(($livro['autores_nomes'] ?? []) as $autor)
+                                                    <input type="hidden" name="autores_nomes[]" value="{{ $autor }}">
+                                                @endforeach
+                                                <button type="submit" class="bg-green-500 text-white px-3 py-1 rounded">Importar</button>
+                                            </form>
+
+                                            {{-- Botão de pré-preenchimento --}}
+                                            <form action="{{ route('google-books.prefill') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="isbn" value="{{ $livro['isbn'] }}">
+                                                <button type="submit" class="bg-yellow-500 text-white px-3 py-1 rounded">Pré-preencher</button>
+                                            </form>
+                                        </div>
                                     @else
                                         <span class="text-gray-500 italic">Sem ISBN — não é possível importar</span>
                                     @endif

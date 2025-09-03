@@ -19,6 +19,7 @@
                     <a href="{{ route('livros.create') }}" class="btn btn-success">➕ Novo Livro</a>
                     <a href="{{ route('autores.create') }}" class="btn btn-warning">➕ Novo Autor</a>
                     <a href="{{ route('editoras.create') }}" class="btn btn-info">➕ Nova Editora</a>
+                    <a href="{{ route('google-books.index') }}" class="btn btn-outline btn-primary">🔍 Importar da Google Books</a>
                 @endif
             </div>
         </div>

@@ -76,6 +76,7 @@ Route::middleware([
         Route::get('/google-books', [GoogleBooksController::class, 'index'])->name('google-books.index');
         Route::get('/google-books/search', [GoogleBooksController::class, 'search'])->name('google-books.search');
         Route::post('/google-books/import', [GoogleBooksController::class, 'import'])->name('google-books.import');
+        Route::post('/google-books/prefill', [GoogleBooksController::class, 'prefill'])->name('google-books.prefill');
     });
 
     /**
