@@ -33,7 +33,7 @@
 
 <div>
     <label class="label">Editora</label>
-    <select name="editora_id" class="select select-bordered w-full">
+    <select name="editora_id" id="editora_id" class="select select-bordered w-full">
         <option value="">Selecione</option>
         @foreach($editoras as $editora)
             <option value="{{ $editora->id }}"
@@ -46,7 +46,7 @@
 
 <div class="mt-2">
     <label class="label">Ou criar nova editora</label>
-    <input type="text" name="nova_editora" value="{{ old('nova_editora') }}" class="input input-bordered w-full" placeholder="Digite o nome da nova editora">
+    <input type="text" name="nova_editora" id="nova_editora" value="{{ old('nova_editora') }}" class="input input-bordered w-full" placeholder="Digite o nome da nova editora">
 </div>
 
 @php
@@ -96,3 +96,17 @@
     <button class="btn btn-primary">{{ isset($livro) ? 'Atualizar' : 'Criar' }}</button>
     <a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary">⬅️ Voltar</a>
 </div>
+
+{{-- Script para limpar campos --}}
+<script>
+document.getElementById('nova_editora').addEventListener('input', function() {
+    if (this.value.trim() !== '') {
+        document.getElementById('editora_id').value = '';
+    }
+});
+document.getElementById('editora_id').addEventListener('change', function() {
+    if (this.value !== '') {
+        document.getElementById('nova_editora').value = '';
+    }
+});
+</script>

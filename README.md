@@ -275,6 +275,47 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Testes realizados com livros com e sem editora vindos da API.
 -   Funcionalidade acessível apenas a utilizadores com perfil Admin.
 
+### Dia 14 — Alinhamento do fluxo de importação/edição com dados da Google Books API e correção de capas
+
+-   **GoogleBooksController@import**:
+
+    -   Passou a aceitar `nova_editora` no momento da importação.
+    -   Criação/associação de nova editora se preenchido, caso contrário usa `editora_nome` da API ou “Editora Desconhecida”.
+    -   Lógica de gravação da capa alinhada com `store()`/`update()`:
+        -   Download da imagem via URL.
+        -   Armazenamento em `storage/app/public/capas` com caminho relativo (`capas/ficheiro.jpg`).
+        -   Compatível com `asset('storage/...')`, eliminando erros 403.
+    -   Criação dinâmica de autores se não existirem.
+    -   Proteção contra nomes inválidos (vazios ou numéricos).
+
+-   **LivroController@store** e **LivroController@update**:
+
+    -   Lógica unificada para gestão de editoras:
+        -   Aceita `editora_id` ou `nova_editora` (`required_without`).
+        -   Cria/associa nova editora mesmo que já exista uma associada.
+        -   Mantida compatibilidade com `editora_nome` vindo da API.
+    -   Substituição da capa (upload manual ou URL) com remoção da anterior.
+    -   Validação consistente com o fluxo de importação.
+
+-   **Views**:
+
+    -   `_form.blade.php`:
+        -   Campo “Ou criar nova editora” limpa automaticamente o `select` e vice‑versa.
+    -   `google-books.index`:
+        -   Adicionado campo “Nova editora (opcional)” nos formulários de importação e atualização.
+    -   `index.blade.php` e `show.blade.php`:
+        -   Exibição de capas usando `asset('storage/...')` para compatibilidade total.
+
+-   **Correções**:
+
+    -   Resolvido problema em que capas importadas da Google Books não eram exibidas (403 Forbidden).
+    -   Garantido que todos os fluxos (criar, editar, importar) usam o mesmo método de gravação de capas.
+
+-   **Testes realizados**:
+    -   Importação de livros novos com e sem editora.
+    -   Atualização de livros existentes com substituição de editora e capa.
+    -   Verificação de acessibilidade das capas via browser.
+
 ---
 
 ## 📂 Funcionalidades

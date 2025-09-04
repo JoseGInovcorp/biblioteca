@@ -88,40 +88,51 @@ class LivroController extends Controller
             abort(403, 'Acesso negado.');
         }
 
-        // 1) Editora vinda da API (editora_nome)
+        // 🔍 Verificar se já existe um livro com este ISBN
+        if ($request->filled('isbn')) {
+            $livroExistente = Livro::where('isbn', $request->isbn)->first();
+            if ($livroExistente) {
+                return redirect()
+                    ->route('livros.edit', $livroExistente)
+                    ->with('warning', 'Este livro já existe. Foi redirecionado para a página de edição.');
+            }
+        }
+
+        // Se vier nova_editora, cria ou obtém e substitui a atual
+        if ($request->filled('nova_editora')) {
+            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
+            $request->merge(['editora_id' => $editora->id]);
+        }
+
+        // Se vier editora_nome da API, também cria/associa
         if ($request->filled('editora_nome')) {
             $editora = Editora::firstOrCreate(['nome' => $request->editora_nome]);
             $request->merge(['editora_id' => $editora->id]);
         }
 
-        // 2) Nova editora escrita pelo utilizador se não escolheu nenhuma
-        if (!$request->filled('editora_id') && $request->filled('nova_editora')) {
-            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
-            $request->merge(['editora_id' => $editora->id]);
-        }
-
+        // Validação: exige editora_id OU nova_editora
         $validated = $request->validate([
-            'nome'        => 'required|string|max:255',
-            'isbn'        => 'required|string|max:255|unique:livros',
-            'editora_id'  => 'required|exists:editoras,id',
+            'nome'         => 'required|string|max:255',
+            'isbn'         => 'required|string|max:255',
+            'editora_id'   => 'required_without:nova_editora|exists:editoras,id',
+            'nova_editora' => 'required_without:editora_id|string|nullable',
             'bibliografia' => 'nullable|string',
-            'preco'       => 'required|numeric',
-            // Aceita ficheiro OU URL (fallback da API)
-            'imagem_capa' => 'nullable',
-            'autores'     => 'array',
-            'autores.*'   => 'exists:autores,id',
+            'preco'        => 'required|numeric',
+            'imagem_capa'  => 'nullable',
+            'autores'      => 'array',
+            'autores.*'    => 'exists:autores,id',
         ]);
 
-        // Capa: upload manual OU URL da API
+        // 📷 Capa: upload manual OU URL da API
         $caminhoCapa = null;
 
         if ($request->hasFile('imagem_capa')) {
             $caminhoCapa = $request->file('imagem_capa')->store('capas', 'public');
         } elseif ($request->filled('imagem_capa') && filter_var($request->imagem_capa, FILTER_VALIDATE_URL)) {
             try {
-                $conteudo  = file_get_contents($request->imagem_capa);
-                $extensao  = pathinfo(parse_url($request->imagem_capa, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-                $ficheiro  = 'capas/' . $request->isbn . '.' . $extensao;
+                $conteudo = file_get_contents($request->imagem_capa);
+                $extensao = pathinfo(parse_url($request->imagem_capa, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+                $ficheiro = 'capas/' . $request->isbn . '.' . $extensao;
                 Storage::disk('public')->put($ficheiro, $conteudo);
                 $caminhoCapa = $ficheiro;
             } catch (\Exception $e) {
@@ -135,7 +146,7 @@ class LivroController extends Controller
 
         $livro = Livro::create($validated);
 
-        // Autores: IDs existentes + criação dinâmica via nomes vindos da API
+        // ✍️ Autores: IDs existentes + criação dinâmica via nomes vindos da API
         $autoresIds = $validated['autores'] ?? [];
 
         foreach ($request->autores_nomes ?? [] as $nomeAutor) {
@@ -190,25 +201,32 @@ class LivroController extends Controller
             abort(403, 'Acesso negado.');
         }
 
-        // Nova editora no update (quando utilizador escreve uma nova)
-        if (!$request->filled('editora_id') && $request->filled('nova_editora')) {
+        // Se vier nova_editora, cria ou obtém e substitui a atual
+        if ($request->filled('nova_editora')) {
             $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
             $request->merge(['editora_id' => $editora->id]);
         }
 
+        // Se vier editora_nome da API, também cria/associa
+        if ($request->filled('editora_nome')) {
+            $editora = Editora::firstOrCreate(['nome' => $request->editora_nome]);
+            $request->merge(['editora_id' => $editora->id]);
+        }
+
+        // Validação: exige editora_id OU nova_editora
         $validated = $request->validate([
-            'nome'        => 'required|string|max:255',
-            'isbn'        => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
-            'editora_id'  => 'required|exists:editoras,id',
+            'nome'         => 'required|string|max:255',
+            'isbn'         => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
+            'editora_id'   => 'required_without:nova_editora|exists:editoras,id',
+            'nova_editora' => 'required_without:editora_id|string|nullable',
             'bibliografia' => 'nullable|string',
-            'preco'       => 'required|numeric',
-            // Aceita ficheiro OU URL, tal como no store()
-            'imagem_capa' => 'nullable',
-            'autores'     => 'array',
-            'autores.*'   => 'exists:autores,id',
+            'preco'        => 'required|numeric',
+            'imagem_capa'  => 'nullable',
+            'autores'      => 'array',
+            'autores.*'    => 'exists:autores,id',
         ]);
 
-        // Capa: upload manual OU URL (substitui a anterior)
+        // 📷 Capa: upload manual OU URL (substitui a anterior)
         $caminhoCapa = null;
 
         if ($request->hasFile('imagem_capa')) {
