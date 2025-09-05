@@ -379,7 +379,7 @@ O vídeo de demonstração do projeto pode ser visto aqui para cada semana:
 
 ---
 
-## [📺 Ver vídeo relativo à segunda semana no Google Drive](https://drive.google.com/file/d/1IzSi-GE5zXihuQ4H9PYxdq78vfYXtAPf/view?usp=sharing)
+[📺 Ver vídeo relativo à segunda semana no Google Drive](https://drive.google.com/file/d/1IzSi-GE5zXihuQ4H9PYxdq78vfYXtAPf/view?usp=sharing)
 
 ---
 
