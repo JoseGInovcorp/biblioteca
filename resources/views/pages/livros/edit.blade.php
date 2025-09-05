@@ -7,7 +7,7 @@
         {{ session('warning') }}
     </div>
 @endif
-<a href="{{ route('autores.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar para lista de livros</a>
+<a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar para lista de livros</a>
 <form method="POST" action="{{ route('livros.update', $livro) }}" enctype="multipart/form-data">
     @include('pages.livros._form')
 </form>

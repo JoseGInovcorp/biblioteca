@@ -14,6 +14,7 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   **TomSelect** (seleção múltipla de autores)
 -   **Google Authenticator** (2FA)
 -   **TablePlus** (gestão da base de dados)
+-   **Mailhog** (simulador de envio de emails)
 
 ---
 
@@ -316,6 +317,40 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
     -   Atualização de livros existentes com substituição de editora e capa.
     -   Verificação de acessibilidade das capas via browser.
 
+### Dia 15 — Finalização do fluxo de criação manual com dados da Google Books API
+
+**GoogleBooksController@prefill**:
+
+-   Pré-preenchimento do formulário de criação com dados da API.
+-   Envio de autores sugeridos (`autores_nomes[]`) como input oculto.
+
+**LivroController@store**:
+
+-   Criação dinâmica de autores sugeridos pela API mesmo quando o utilizador valida manualmente.
+-   Autores que ainda não existem são apresentados como opções no `<select>`.
+-   Identificadores temporários (`novo_nome`) tratados e convertidos em autores reais no momento da gravação.
+-   Validação ajustada para aceitar autores dinâmicos sem bloquear o processo.
+-   Mantida compatibilidade com `autores_nomes[]` como fallback.
+
+**Views**:
+
+-   `_form.blade.php`:
+    -   Autores sugeridos pela API aparecem como opções no `<select>`, mesmo que ainda não existam na base de dados.
+-   `google-books.index`:
+    -   Adicionado botão “⬅️ Voltar para Lista de Livros” para facilitar navegação.
+
+**Correções**:
+
+-   Resolvido problema em que autores sugeridos pela API não eram criados no fluxo de criação manual.
+-   Garantido que tanto a importação direta como a criação manual mantêm consistência na associação de autores.
+
+**Testes realizados**:
+
+-   Criação de livro via formulário com dados pré-preenchidos da API.
+-   Validação manual com seleção de autores sugeridos.
+-   Criação automática de autores não existentes.
+-   Verificação da associação correta dos autores ao livro.
+
 ---
 
 ## 📂 Funcionalidades
@@ -325,6 +360,8 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Upload e visualização de imagens.
 -   Pesquisa, ordenação e filtros nas listagens.
 -   Seleção múltipla de autores com TomSelect.
+-   Criação dinâmica de autores sugeridos pela Google Books API.
+-   Validação inteligente de autores no formulário de criação (identificadores temporários).
 -   Cifragem de dados sensíveis (`isbn`, `bibliografia`, `name` do utilizador).
 -   Exportação de Livros para Excel.
 -   Tema personalizável com DaisyUI.
@@ -339,6 +376,13 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 O vídeo de demonstração do projeto pode ser visto aqui para cada semana:  
 [📺 Ver vídeo relativo à primeira semana no Google Drive](https://drive.google.com/file/d/1sqUylRn32b3t0sHrZI0jN22yGXUuAsDD/view?usp=sharing)
-[📺 Ver vídeo relativo à segunda semana no Google Drive](https://drive.google.com/file/d/1IzSi-GE5zXihuQ4H9PYxdq78vfYXtAPf/view?usp=sharing)
+
+---
+
+## [📺 Ver vídeo relativo à segunda semana no Google Drive](https://drive.google.com/file/d/1IzSi-GE5zXihuQ4H9PYxdq78vfYXtAPf/view?usp=sharing)
+
+---
+
+[📺 Ver vídeo relativo à terceira semana no Google Drive](https://drive.google.com/file/d/1fgwtMZMhHvDYDBg1g7JZI49P_-Jifez8/view?usp=sharing)
 
 Desenvolvido por José G. durante estágio na InovCorp.

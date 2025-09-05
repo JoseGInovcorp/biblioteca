@@ -98,29 +98,27 @@ class LivroController extends Controller
             }
         }
 
-        // Se vier nova_editora, cria ou obtém e substitui a atual
-        if ($request->filled('nova_editora')) {
-            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
-            $request->merge(['editora_id' => $editora->id]);
-        }
-
-        // Se vier editora_nome da API, também cria/associa
+        // 1) Editora vinda da API (editora_nome)
         if ($request->filled('editora_nome')) {
             $editora = Editora::firstOrCreate(['nome' => $request->editora_nome]);
             $request->merge(['editora_id' => $editora->id]);
         }
 
-        // Validação: exige editora_id OU nova_editora
+        // 2) Nova editora escrita pelo utilizador se não escolheu nenhuma
+        if (!$request->filled('editora_id') && $request->filled('nova_editora')) {
+            $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
+            $request->merge(['editora_id' => $editora->id]);
+        }
+
         $validated = $request->validate([
             'nome'         => 'required|string|max:255',
             'isbn'         => 'required|string|max:255',
-            'editora_id'   => 'required_without:nova_editora|exists:editoras,id',
-            'nova_editora' => 'required_without:editora_id|string|nullable',
+            'editora_id'   => 'required|exists:editoras,id',
             'bibliografia' => 'nullable|string',
             'preco'        => 'required|numeric',
             'imagem_capa'  => 'nullable',
             'autores'      => 'array',
-            'autores.*'    => 'exists:autores,id',
+            // Removida a regra exists para permitir autores dinâmicos
         ]);
 
         // 📷 Capa: upload manual OU URL da API
@@ -147,8 +145,21 @@ class LivroController extends Controller
         $livro = Livro::create($validated);
 
         // ✍️ Autores: IDs existentes + criação dinâmica via nomes vindos da API
-        $autoresIds = $validated['autores'] ?? [];
+        $autoresIds = [];
 
+        // 1) Autores selecionados no <select>
+        foreach ($request->autores ?? [] as $autorId) {
+            if (Str::startsWith($autorId, 'novo_')) {
+                $nome = Str::replaceFirst('novo_', '', $autorId);
+                $nome = Str::of($nome)->replace('-', ' ')->title();
+                $autor = Autor::firstOrCreate(['nome' => $nome]);
+                $autoresIds[] = $autor->id;
+            } else {
+                $autoresIds[] = $autorId;
+            }
+        }
+
+        // 2) Autores vindos da API (autores_nomes[])
         foreach ($request->autores_nomes ?? [] as $nomeAutor) {
             $nomeLimpo = trim(mb_strtolower($nomeAutor));
             if (empty($nomeLimpo) || is_numeric($nomeLimpo) || !preg_match('/[a-z]/i', $nomeLimpo)) {

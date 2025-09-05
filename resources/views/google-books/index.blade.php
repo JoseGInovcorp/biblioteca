@@ -4,6 +4,9 @@
     </x-slot>
 
     <div class="p-6">
+        {{-- Botão de voltar --}}
+        <a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar para Lista de Livros</a>
+
         {{-- Erros de validação --}}
         @if ($errors->any())
             <div class="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded">
