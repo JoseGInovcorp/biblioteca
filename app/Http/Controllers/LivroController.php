@@ -176,8 +176,16 @@ class LivroController extends Controller
 
     public function show(Livro $livro)
     {
-        $livro->load(['editora', 'autores']);
+        // Carregar editora, autores e reviews ativas com o autor (user)
+        $livro->load([
+            'editora',
+            'autores',
+            'reviews' => function ($query) {
+                $query->where('estado', 'ativo')->with('user');
+            }
+        ]);
 
+        // Carregar requisições conforme o tipo de utilizador
         if (auth()->user()->isAdmin()) {
             $livro->load(['requisicoes.cidadao']);
         } else {
@@ -192,6 +200,7 @@ class LivroController extends Controller
 
         return view('pages.livros.show', compact('livro'));
     }
+
 
     public function edit(Livro $livro)
     {

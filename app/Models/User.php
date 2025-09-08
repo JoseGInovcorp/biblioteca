@@ -18,7 +18,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role', // 👈 Adicionado para permitir atribuir role
+        'role',
     ];
 
     protected $hidden = [
@@ -52,7 +52,7 @@ class User extends Authenticatable
         return Crypt::decryptString($value);
     }
 
-    // 👇 Métodos para verificar role
+    // 👤 Verificações de perfil
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
@@ -65,6 +65,11 @@ class User extends Authenticatable
 
     public function requisicoes()
     {
-        return $this->hasMany(\App\Models\Requisicao::class, 'cidadao_id');
+        return $this->hasMany(Requisicao::class, 'cidadao_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 }

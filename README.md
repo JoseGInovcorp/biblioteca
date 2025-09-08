@@ -351,6 +351,129 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Criação automática de autores não existentes.
 -   Verificação da associação correta dos autores ao livro.
 
+### Dia 16 — Implementação do Módulo de Reviews e Reestruturação do Menu Admin
+
+**Base de Dados:**
+
+-   Criação da tabela `reviews` com os campos:
+
+    -   `id`
+    -   `user_id` (FK para cidadãos)
+    -   `livro_id` (FK para livros)
+    -   `comentario`
+    -   `estado` (`suspenso`, `ativo`, `recusado`)
+    -   `justificacao` (opcional)
+    -   `timestamps`
+
+-   Relações definidas:
+    -   `Review` pertence a `User` e a `Livro`
+    -   `Livro` tem muitas `Review`
+    -   `User` tem muitas `Review`
+
+**Submissão de Reviews:**
+
+-   Cidadãos podem submeter uma review após requisitar e devolver um livro.
+-   Estado inicial da review: `suspenso`.
+-   Proteção de rota: apenas cidadãos autenticados podem submeter.
+
+**Moderação de Reviews:**
+
+-   Página de moderação acessível via `/admin/reviews` (rota `reviews.index`).
+-   Listagem de reviews pendentes com:
+
+    -   Nome do cidadão
+    -   Livro associado
+    -   Comentário
+    -   Formulário para aprovar ou recusar
+    -   Campo de justificação (caso de recusa)
+    -   Link para visualizar o livro
+
+-   Método `update` no `ReviewController` para alterar estado da review.
+
+---
+
+**Notificações por Email:**
+
+-   Para o admin:
+
+    -   Email enviado quando uma nova review é submetida.
+    -   Inclui link seguro com redirecionamento pós-login para a página de moderação.
+
+-   Para o cidadão:
+    -   Email enviado após moderação.
+    -   Informa se a review foi aprovada ou recusada.
+    -   Inclui justificação (se aplicável).
+    -   Se aprovada, inclui link para o livro.
+
+---
+
+**Exibição Pública:**
+
+-   Apenas reviews com estado `ativo` são exibidas no detalhe do livro.
+-   View `livros.show` atualizada para listar:
+    -   Nome do cidadão
+    -   Comentário
+    -   Data da review (opcional)
+
+---
+
+**Rota Técnica de Redirecionamento:**
+
+-   Rota `/moderacao/reviews` criada para:
+    -   Guardar destino na sessão (`url.intended`)
+    -   Redirecionar para login se necessário
+    -   Levar o admin diretamente à página de moderação após login
+
+---
+
+**Acesso Rápido no Menu:**
+
+-   Botão “📝 Moderar Reviews” adicionado ao `home.blade.php`, visível apenas para admins.
+-   Permite acesso direto à página de moderação sem depender do email.
+
+---
+
+**Histórico de Reviews Moderadas:**
+
+-   Página de moderação expandida para incluir:
+
+    -   Reviews pendentes (`suspenso`)
+    -   Reviews aprovadas (`ativo`)
+    -   Reviews recusadas (`recusado`)
+
+-   Cada secção com contador e visualização clara.
+
+---
+
+**Menu Principal (`home.blade.php`):**
+
+-   Reestruturação visual para admins:
+    -   Separação por categorias:
+        -   📦 Catálogo: Livros, Autores, Editoras
+        -   👥 Gestão: Utilizadores, Reviews
+        -   ➕ Ações Rápidas: Criar novo livro, autor, editora
+    -   Uso de cards com títulos, ícones e descrições.
+    -   Layout responsivo com `grid`, `shadow` e botões organizados.
+
+**Dashboard de Contadores:**
+
+-   Painel exclusivo para admins no topo da página.
+-   Mostra:
+    -   📚 Total de livros
+    -   👥 Total de utilizadores
+    -   📝 Reviews pendentes
+    -   📦 Requisições ativas
+-   Dados carregados via `HomeController@index` e enviados para a view.
+
+**Testes realizados:**
+
+-   Submissão de review por cidadão.
+-   Moderação por admin com aprovação e recusa.
+-   Verificação da exibição pública das reviews aprovadas.
+-   Receção de emails por admin e cidadão.
+-   Navegação direta via menu e via link do email.
+-   Validação da nova estrutura visual do menu e dashboard.
+
 ---
 
 ## 📂 Funcionalidades

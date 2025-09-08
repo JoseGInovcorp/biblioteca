@@ -83,4 +83,20 @@
         </tbody>
     </table>
 @endif
+
+{{-- 📢 Opiniões dos leitores --}}
+@if($livro->reviews->count())
+    <h3 class="text-xl font-semibold mt-6 mb-2">💬 Opiniões dos leitores</h3>
+    @foreach($livro->reviews as $review)
+        <div class="mb-4 border-b pb-2">
+            <strong>{{ $review->user->name }}</strong>
+            <small class="text-gray-500">— {{ $review->created_at->format('d/m/Y') }}</small>
+            <p>{{ $review->comentario }}</p>
+        </div>
+    @endforeach
+@else
+    <h3 class="text-xl font-semibold mt-6 mb-2">💬 Opiniões dos leitores</h3>
+    <p class="text-gray-500 italic">Ainda não existem reviews para este livro.</p>
+@endif
+
 @endsection

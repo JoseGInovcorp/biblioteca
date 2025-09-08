@@ -60,9 +60,7 @@
             <th>Início</th>
             <th>Fim Previsto</th>
             <th>Status</th>
-            @if(auth()->user()->isAdmin())
-                <th>Ações</th>
-            @endif
+            <th>Ação</th> {{-- nova coluna visível para todos --}}
         </tr>
     </thead>
     <tbody>
@@ -80,8 +78,22 @@
             <td>{{ $req->data_inicio }}</td>
             <td>{{ $req->data_fim_prevista }}</td>
             <td>{{ ucfirst($req->status) }}</td>
-            @if(auth()->user()->isAdmin())
-                <td class="flex gap-2">
+            <td class="flex gap-2">
+                {{-- Botão para cidadão deixar review --}}
+                @if(
+                    auth()->user()->isCidadao() &&
+                    $req->status === 'entregue' &&
+                    !$req->review &&
+                    $req->cidadao_id === auth()->id()
+                )
+                    <a href="{{ route('requisicoes.show', $req) }}?review=1" class="btn btn-sm btn-primary">
+    📝 Deixar Review
+</a>
+
+                @endif
+
+                {{-- Ações de admin --}}
+                @if(auth()->user()->isAdmin())
                     @if($req->status === 'ativa')
                         <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
                     @endif
@@ -91,8 +103,8 @@
                         @method('DELETE')
                         <button class="btn btn-sm btn-error">🗑️ Apagar</button>
                     </form>
-                </td>
-            @endif
+                @endif
+            </td>
         </tr>
         @endforeach
     </tbody>

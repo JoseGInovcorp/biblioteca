@@ -23,9 +23,14 @@ class Livro extends Model
     {
         return $this->hasMany(Requisicao::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }
 
-
+// 🔓 Descriptografar ISBNs antigos
 foreach (Livro::all() as $livro) {
     $raw = $livro->getRawOriginal('isbn');
 
@@ -34,6 +39,7 @@ foreach (Livro::all() as $livro) {
             $livro->isbn = decrypt($raw);
             $livro->save();
         } catch (\Exception $e) {
+            // Ignorar falhas de descriptografia
         }
     }
 }

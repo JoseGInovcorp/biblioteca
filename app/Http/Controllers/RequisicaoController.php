@@ -18,7 +18,8 @@ class RequisicaoController extends Controller
         $user = auth()->user();
         $status = $request->input('status');
 
-        $query = Requisicao::with('livro', 'cidadao')->latest();
+        // 🔹 Incluímos 'review' para saber no index se já existe review associada
+        $query = Requisicao::with('livro', 'cidadao', 'review')->latest();
 
         if ($user->isCidadao()) {
             $query->where('cidadao_id', $user->id);
@@ -147,7 +148,7 @@ class RequisicaoController extends Controller
 
     public function show(Requisicao $requisicao)
     {
-        $requisicao->loadMissing('livro', 'cidadao');
+        $requisicao->loadMissing('livro', 'cidadao', 'review');
         return view('pages.requisicoes.show', compact('requisicao'));
     }
 

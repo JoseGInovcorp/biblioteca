@@ -1,17 +1,34 @@
 <?php
 
-use App\Models\Requisicao;
-use App\Mail\RequisicaoCriada;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RequisicaoCriada;
+use App\Models\Requisicao;
+use App\Models\User;
 use App\Exports\LivrosExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LivroController;
 use App\Http\Controllers\AutorController;
 use App\Http\Controllers\EditoraController;
 use App\Http\Controllers\RequisicaoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GoogleBooksController;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\ReviewController;
+
+/**
+ * 🔹 Rota “ponte” para moderação de reviews
+ * - Guarda o destino na sessão
+ * - Se já for admin autenticado, vai direto
+ * - Se não, redireciona para login
+ */
+Route::get('/moderacao/reviews', function () {
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        return redirect()->route('reviews.index');
+    }
+    session()->put('url.intended', route('reviews.index'));
+    return redirect()->route('login');
+})->name('moderacao.reviews.link');
 
 Route::middleware([
     'auth:sanctum',
@@ -19,39 +36,25 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    // Página inicial
-    Route::get('/', function () {
-        return view('home');
-    })->name('home');
+    // Página inicial com dashboard de contadores
+    Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    /**
-     * 📚 Livros
-     * - index e show → todos autenticados
-     * - create/store/edit/update/destroy → só admin (verificação no controller)
-     */
+    /** 📚 Livros */
     Route::resource('livros', LivroController::class);
 
-    /**
-     * ✍️ Autores
-     */
+    /** ✍️ Autores */
     Route::resource('autores', AutorController::class)->parameters([
         'autores' => 'autor'
     ]);
 
-    /**
-     * 🏢 Editoras
-     */
+    /** 🏢 Editoras */
     Route::resource('editoras', EditoraController::class);
 
-    /**
-     * 📦 Requisições
-     */
+    /** 📦 Requisições */
     Route::resource('requisicoes', RequisicaoController::class)
         ->parameters(['requisicoes' => 'requisicao']);
 
-    /**
-     * 📤 Exportação de livros para Excel
-     */
+    /** 📤 Exportação de livros para Excel */
     Route::get('/exportar-livros', function () {
         if (!auth()->user()->isAdmin()) {
             abort(403, 'Acesso negado.');
@@ -59,19 +62,15 @@ Route::middleware([
         return Excel::download(new LivrosExport, 'livros.xlsx');
     })->name('livros.exportar');
 
-    // Dashboard
+    /** 🧭 Dashboard genérico */
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    /**
-     * 👥 Utilizadores
-     */
+    /** 👥 Utilizadores */
     Route::resource('users', UserController::class)->only(['index', 'show', 'create', 'store']);
 
-    /**
-     * 📚 Integração Google Books API
-     */
+    /** 📚 Integração Google Books API */
     Route::middleware('can:isAdmin')->group(function () {
         Route::get('/google-books', [GoogleBooksController::class, 'index'])->name('google-books.index');
         Route::get('/google-books/search', [GoogleBooksController::class, 'search'])->name('google-books.search');
@@ -80,17 +79,25 @@ Route::middleware([
         Route::post('/google-books/prefill-edit/{livro}', [GoogleBooksController::class, 'prefillEdit'])->name('google-books.prefillEdit');
     });
 
-    /**
-     * ✉️ Rota temporária para teste de email no MailHog
-     */
+    /** ✉️ Teste de email via MailHog */
     Route::get('/teste-mailhog', function () {
         $req = Requisicao::with('livro', 'cidadao')->latest()->first();
-        $admins = \App\Models\User::where('role', 'admin')->pluck('email')->all();
+        $admins = User::where('role', 'admin')->pluck('email')->all();
 
         Mail::to($req->cidadao->email)
             ->bcc($admins)
             ->send(new RequisicaoCriada($req));
 
         return 'Email enviado para o MailHog';
+    });
+
+    /** 💬 Reviews */
+    Route::middleware(['auth'])->group(function () {
+        // Submissão de review pelo cidadão
+        Route::post('/requisicoes/{requisicao}/review', [ReviewController::class, 'store'])->name('reviews.store');
+
+        // Moderação de reviews pelo admin
+        Route::get('/admin/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/admin/reviews/{review}', [ReviewController::class, 'update'])->name('reviews.update');
     });
 });

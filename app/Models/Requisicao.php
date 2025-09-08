@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Requisicao extends Model
 {
-    // 👇 Adicionar esta linha
     protected $table = 'requisicoes';
 
     protected $fillable = [
@@ -28,6 +27,11 @@ class Requisicao extends Model
     public function cidadao()
     {
         return $this->belongsTo(User::class, 'cidadao_id');
+    }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class);
     }
 
     protected static function booted()
