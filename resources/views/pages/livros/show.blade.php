@@ -108,4 +108,84 @@
     <p class="text-gray-500 italic">Ainda não existem reviews para este livro.</p>
 @endif
 
+@if(isset($relacionados) && $relacionados->count())
+    <div class="mt-8">
+        <h3 class="text-xl font-semibold mb-3">📚 Livros Relacionados</h3>
+
+        {{-- Grupo: Do mesmo autor --}}
+        @php
+            $mesmoAutor = $relacionados->filter(function($rel) use ($livro) {
+                return $rel->autores->pluck('id')->intersect($livro->autores->pluck('id'))->isNotEmpty();
+            });
+            $mesmoTema = $relacionados->reject(function($rel) use ($livro) {
+                return $rel->autores->pluck('id')->intersect($livro->autores->pluck('id'))->isNotEmpty();
+            });
+        @endphp
+
+        @if($mesmoAutor->count())
+            <h4 class="text-lg font-semibold mt-4 mb-2">✍️ Do mesmo autor</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                @foreach($mesmoAutor as $rel)
+                    <a href="{{ route('livros.show', $rel) }}" class="p-3 border rounded hover:shadow transition">
+                        <div class="flex gap-3">
+                            @if($rel->imagem_capa)
+                                <img src="{{ asset('storage/' . $rel->imagem_capa) }}"
+                                     alt="Capa de {{ $rel->nome }}"
+                                     class="w-16 h-24 object-cover rounded">
+                            @endif
+                            <div>
+                                <div class="font-semibold">{{ $rel->nome }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {{ optional($rel->editora)->nome }}
+                                    @if($rel->autores && $rel->autores->count())
+                                        • {{ $rel->autores->pluck('nome')->join(', ') }}
+                                    @endif
+                                </div>
+                                @if(!empty($rel->keywords))
+                                    <div class="mt-1 text-xs text-gray-400">
+                                        {{ implode(' · ', array_slice($rel->keywords, 0, 5)) }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+
+        {{-- Grupo: Semelhantes no tema --}}
+        @if($mesmoTema->count())
+            <h4 class="text-lg font-semibold mt-6 mb-2">📌 Semelhantes no tema</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                @foreach($mesmoTema as $rel)
+                    <a href="{{ route('livros.show', $rel) }}" class="p-3 border rounded hover:shadow transition">
+                        <div class="flex gap-3">
+                            @if($rel->imagem_capa)
+                                <img src="{{ asset('storage/' . $rel->imagem_capa) }}"
+                                     alt="Capa de {{ $rel->nome }}"
+                                     class="w-16 h-24 object-cover rounded">
+                            @endif
+                            <div>
+                                <div class="font-semibold">{{ $rel->nome }}</div>
+                                <div class="text-sm text-gray-500">
+                                    {{ optional($rel->editora)->nome }}
+                                    @if($rel->autores && $rel->autores->count())
+                                        • {{ $rel->autores->pluck('nome')->join(', ') }}
+                                    @endif
+                                </div>
+                                @if(!empty($rel->keywords))
+                                    <div class="mt-1 text-xs text-gray-400">
+                                        {{ implode(' · ', array_slice($rel->keywords, 0, 5)) }}
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endif
+
+
 @endsection

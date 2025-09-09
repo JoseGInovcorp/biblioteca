@@ -198,9 +198,11 @@ class LivroController extends Controller
             );
         }
 
-        return view('pages.livros.show', compact('livro'));
-    }
+        // Carregar livros relacionados com base nas keywords
+        $relacionados = $livro->relacionados(5);
 
+        return view('pages.livros.show', compact('livro', 'relacionados'));
+    }
 
     public function edit(Livro $livro)
     {

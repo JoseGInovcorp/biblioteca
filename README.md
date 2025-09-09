@@ -476,7 +476,7 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 ---
 
-### 📌 Alteração: Campo `bibliografia` → `descricao` + Exibição no Frontend
+### Dia 17 — 📌 Alteração: Campo `bibliografia` → `descricao` + Exibição no Frontend e Desafio 2: Sistema de Livros Relacionados
 
 **O que foi feito:**
 
@@ -489,6 +489,57 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 -   O termo _bibliografia_ não representava corretamente o conteúdo armazenado (sinopse/resumo do livro).
 -   Melhorar a clareza do código e a experiência do utilizador, permitindo que veja a descrição diretamente na plataforma.
+
+**Modelo `Livro`:**
+
+-   Implementado método `extractKeywordsFromDescricao` melhorado:
+
+    -   Uso de `Str::ascii()` para remoção precisa de acentos.
+    -   Limpeza de texto preservando espaços e evitando cortes de palavras.
+    -   Filtro para ignorar palavras curtas, sem vogais ou presentes na lista de _stopwords_.
+    -   Limite de 15 palavras-chave mais frequentes.
+
+-   Atualização do método `relacionados`:
+    -   Combinação de dois critérios:
+        -   Livros com pelo menos 2 keywords em comum.
+        -   Livros do mesmo autor (prioridade máxima).
+    -   Ordenação final com “mesmo autor” no topo, seguido de afinidade temática.
+    -   Remoção de duplicados com `unique('id')`.
+
+---
+
+**Controller:**
+
+-   Ajuste no método `show` para carregar `$relacionados` e enviar para a view.
+
+---
+
+**View `livros.show`:**
+
+-   Criação da secção **"Livros Relacionados"**.
+-   Separação visual em dois grupos:
+    -   ✍️ **Do mesmo autor**
+    -   📌 **Semelhantes no tema**
+-   Exibição de:
+    -   Capa do livro.
+    -   Nome, editora e autores.
+    -   Até 5 keywords.
+-   Badge “✍️ Do mesmo autor” para identificação rápida.
+
+---
+
+**Reprocessamento de Keywords:**
+
+-   Execução de _backfill_ via Tinker para recalcular keywords de livros já existentes com a nova lógica.
+
+---
+
+**Testes realizados:**
+
+-   Validação de keywords geradas (sem cortes e mais relevantes).
+-   Verificação de sugestões coerentes por afinidade temática.
+-   Confirmação de prioridade para livros do mesmo autor.
+-   Teste da separação visual na interface.
 
 ## 📂 Funcionalidades
 
