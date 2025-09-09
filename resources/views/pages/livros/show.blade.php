@@ -43,6 +43,15 @@
         <img src="{{ asset('storage/' . $livro->imagem_capa) }}" alt="Capa de {{ $livro->nome }}">
     @endif
 
+    {{-- Descrição do livro --}}
+    @if(!empty($livro->descricao))
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold">Descrição</h3>
+            <p class="mt-2 text-gray-700 whitespace-pre-line">
+                {{ $livro->descricao }}
+            </p>
+        </div>
+    @endif
 </div>
 
 <h3 class="text-xl font-semibold mt-6 mb-2">📚 Histórico de Requisições</h3>

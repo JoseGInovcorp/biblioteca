@@ -114,7 +114,7 @@ class GoogleBooksController extends Controller
         $request->validate([
             'isbn'          => 'required|string',
             'nome'          => 'required|string',
-            'bibliografia'  => 'nullable|string',
+            'descricao'  => 'nullable|string',
             'imagem_capa'   => 'nullable|url',
             'editora_nome'  => 'required_without:nova_editora|nullable|string',
             'nova_editora'  => 'required_without:editora_nome|nullable|string',
@@ -154,7 +154,7 @@ class GoogleBooksController extends Controller
         // Criar ou atualizar livro
         $dadosLivro = [
             'nome'         => $request->nome,
-            'bibliografia' => $request->bibliografia,
+            'descricao' => $request->descricao,
             'preco'        => $request->preco ?? 0.00,
             'editora_id'   => $editora->id,
         ];

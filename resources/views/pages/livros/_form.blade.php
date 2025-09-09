@@ -69,8 +69,8 @@
 </div>
 
 <div>
-    <label class="label">Bibliografia</label>
-    <textarea name="bibliografia" class="textarea textarea-bordered w-full">{{ old('bibliografia', $livro->bibliografia ?? '') }}</textarea>
+    <label class="label">Descrição</label>
+    <textarea name="descricao" class="textarea textarea-bordered w-full">{{ old('descricao', $livro->descricao ?? '') }}</textarea>
 </div>
 
 <div>

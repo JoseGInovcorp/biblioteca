@@ -55,7 +55,7 @@
     <thead>
         <tr>
             <th>Capa</th>
-            <th>Nome</th>
+            <th>Nome / Descrição</th>
             <th>Editora</th>
             <th>Autores</th>
             <th>Preço</th>
@@ -81,7 +81,15 @@
                 @endif
             </td>
 
-            <td>{{ $livro->nome }}</td>
+            <td>
+                <div class="font-semibold">{{ $livro->nome }}</div>
+                @if(!empty($livro->descricao))
+                    <div class="text-sm text-gray-500">
+                        {{ Str::limit(strip_tags($livro->descricao), 80, '...') }}
+                    </div>
+                @endif
+            </td>
+
             <td>{{ $livro->editora->nome }}</td>
             <td>
                 @foreach($livro->autores as $autor)
@@ -97,26 +105,25 @@
                 @endif
             </td>
             <td class="min-w-[140px]">
-    <div class="flex gap-2 items-center">
-        <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+                <div class="flex gap-2 items-center">
+                    <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
 
-        @auth
-            @if(auth()->user()->isCidadao())
-                @if($disponivel)
-                    <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
-                    class="btn btn-sm btn-success">📦 Requisitar</a>
-                @else
-                    <button class="btn btn-sm btn-disabled" disabled>📦 Indisponível</button>
-                @endif
-            @endif
+                    @auth
+                        @if(auth()->user()->isCidadao())
+                            @if($disponivel)
+                                <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}"
+                                class="btn btn-sm btn-success">📦 Requisitar</a>
+                            @else
+                                <button class="btn btn-sm btn-disabled" disabled>📦 Indisponível</button>
+                            @endif
+                        @endif
 
-            @if(auth()->user()->isAdmin())
-                <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
-            @endif
-        @endauth
-    </div>
-</td>
-
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                        @endif
+                    @endauth
+                </div>
+            </td>
         </tr>
         @endforeach
     </tbody>

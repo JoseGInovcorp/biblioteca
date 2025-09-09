@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Crypt;
 
 class Livro extends Model
 {
-    protected $fillable = ['isbn', 'nome', 'editora_id', 'bibliografia', 'imagem_capa', 'preco'];
+    protected $fillable = ['isbn', 'nome', 'editora_id', 'descricao', 'imagem_capa', 'preco'];
 
     public function autores()
     {

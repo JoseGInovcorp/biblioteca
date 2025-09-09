@@ -85,7 +85,7 @@ class GoogleBooksService
         return [
             'isbn'          => $isbn13,
             'nome'          => $info['title'] ?? null,
-            'bibliografia'  => $info['description'] ?? null,
+            'descricao'  => $info['description'] ?? null,
             'imagem_capa'   => $info['imageLinks']['thumbnail'] ?? null,
             'editora_nome'  => $info['publisher'] ?? null,
             'autores_nomes' => collect($info['authors'] ?? [])

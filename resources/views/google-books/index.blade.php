@@ -67,7 +67,7 @@
                                                     @csrf
                                                     <input type="hidden" name="isbn" value="{{ $livro['isbn'] }}">
                                                     <input type="hidden" name="nome" value="{{ $livro['nome'] }}">
-                                                    <input type="hidden" name="bibliografia" value="{{ $livro['bibliografia'] }}">
+                                                    <input type="hidden" name="descricao" value="{{ $livro['descricao'] }}">
                                                     <input type="hidden" name="imagem_capa" value="{{ $livro['imagem_capa'] }}">
                                                     <input type="hidden" name="editora_nome" value="{{ $livro['editora_nome'] }}">
                                                     @foreach(($livro['autores_nomes'] ?? []) as $autor)
@@ -102,7 +102,7 @@
                                                     @csrf
                                                     <input type="hidden" name="isbn" value="{{ $livro['isbn'] }}">
                                                     <input type="hidden" name="nome" value="{{ $livro['nome'] }}">
-                                                    <input type="hidden" name="bibliografia" value="{{ $livro['bibliografia'] }}">
+                                                    <input type="hidden" name="descricao" value="{{ $livro['descricao'] }}">
                                                     <input type="hidden" name="imagem_capa" value="{{ $livro['imagem_capa'] }}">
                                                     <input type="hidden" name="editora_nome" value="{{ $livro['editora_nome'] }}">
                                                     @foreach(($livro['autores_nomes'] ?? []) as $autor)
