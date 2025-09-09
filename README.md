@@ -476,6 +476,20 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 ---
 
+### 📌 Alteração: Campo `bibliografia` → `descricao` + Exibição no Frontend
+
+**O que foi feito:**
+
+-   Renomeada a coluna `bibliografia` para `descricao` na tabela `livros` para tornar o nome mais intuitivo e alinhado com a função real do campo.
+-   Atualizados todos os controladores, serviços e views para refletir esta mudança.
+-   Passado a exibir a descrição completa na página de detalhe (`show`) do livro.
+-   Adicionado um excerto da descrição na listagem (`index`) para dar mais contexto ao utilizador.
+
+**Motivo:**
+
+-   O termo _bibliografia_ não representava corretamente o conteúdo armazenado (sinopse/resumo do livro).
+-   Melhorar a clareza do código e a experiência do utilizador, permitindo que veja a descrição diretamente na plataforma.
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).
