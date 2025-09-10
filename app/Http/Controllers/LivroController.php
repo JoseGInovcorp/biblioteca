@@ -6,9 +6,12 @@ use App\Models\Livro;
 use App\Models\Editora;
 use App\Models\Autor;
 use App\Models\Genero;
+use App\Mail\LivroDisponivelMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class LivroController extends Controller
 {
@@ -304,6 +307,24 @@ class LivroController extends Controller
         // Atualiza géneros (muitos-para-muitos)
         if (!empty($validated['generos'])) {
             $livro->generos()->sync($validated['generos']);
+        }
+
+        // Verifica se o livro está disponível (sem requisições ativas)
+        $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
+
+        // Dispara alertas se houver alertas pendentes e o livro estiver disponível
+        if ($ficouDisponivel) {
+            Log::info("📡 Verificação de alertas iniciada para livro {$livro->id}");
+
+            foreach ($livro->alertas()->whereNull('notificado_em')->get() as $alerta) {
+                try {
+                    Mail::to($alerta->user->email)->send(new LivroDisponivelMail($livro, $alerta));
+                    $alerta->update(['notificado_em' => now()]);
+                    Log::info("📧 Alerta enviado para {$alerta->user->email}");
+                } catch (\Exception $e) {
+                    Log::error("❌ Erro ao enviar alerta: " . $e->getMessage());
+                }
+            }
         }
 
         return redirect()->route('livros.index', ['page' => $request->input('page', 1)])

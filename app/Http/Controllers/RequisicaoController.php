@@ -166,6 +166,25 @@ class RequisicaoController extends Controller
 
         $requisicao->update($validated);
 
+        $livro = $requisicao->livro;
+
+        // Verifica se o livro ficou disponível após esta entrega
+        $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
+
+        if ($ficouDisponivel) {
+            \Log::info("📡 Livro {$livro->id} ficou disponível após entrega. Verificando alertas...");
+
+            foreach ($livro->alertas()->whereNull('notificado_em')->get() as $alerta) {
+                try {
+                    Mail::to($alerta->user->email)->send(new \App\Mail\LivroDisponivelMail($livro, $alerta));
+                    $alerta->update(['notificado_em' => now()]);
+                    \Log::info("📧 Alerta enviado para {$alerta->user->email}");
+                } catch (\Exception $e) {
+                    \Log::error("❌ Erro ao enviar alerta: " . $e->getMessage());
+                }
+            }
+        }
+
         return redirect()
             ->route('requisicoes.index')
             ->with('success', 'Requisição atualizada!');

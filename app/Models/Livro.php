@@ -276,4 +276,9 @@ class Livro extends Model
     {
         return $this->belongsToMany(Genero::class, 'genero_livro');
     }
+
+    public function alertas()
+    {
+        return $this->hasMany(AlertaLivro::class);
+    }
 }

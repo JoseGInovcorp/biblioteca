@@ -613,6 +613,23 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 
 ---
 
+### 📬 Desafio 3 — Alertas de Disponibilidade de Livros
+
+Implementado sistema de alertas que permite aos cidadãos receberem notificações por email quando um livro requisitado por outro utilizador ficar disponível.
+
+**Funcionalidades incluídas:**
+
+-   Pedido de alerta por cidadão quando o livro está indisponível
+-   Disparo automático de email após entrega do livro, se não houver requisições ativas
+-   Template de email personalizado com capa, título e link direto para o livro
+-   Assunto do email ajustado para “📚 Livro disponível para requisição”
+-   Lógica que permite novo pedido de alerta caso o utilizador tenha sido notificado mas não requisitou o livro
+-   Validação completa do fluxo com testes manuais
+
+> Este sistema garante que os utilizadores são informados no momento certo e podem repetir o pedido de alerta sempre que necessário, sem duplicações indesejadas.
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

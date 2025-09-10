@@ -51,6 +51,21 @@
                     <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}" class="btn btn-success mt-2">📦 Requisitar</a>
                 @else
                     <button class="btn btn-disabled mt-2" disabled>📦 Indisponível</button>
+
+                    @php
+                        $alerta = $livro->alertas()->where('user_id', auth()->id())->latest()->first();
+                        $mostrarBotaoAlerta = !$alerta || $alerta->notificado_em !== null;
+                    @endphp
+
+                    @if($mostrarBotaoAlerta)
+                        <form method="POST" action="{{ route('alertas.store', $livro) }}" class="mt-2">
+                            @csrf
+                            <button class="btn btn-warning">🔔 Avisar-me quando disponível</button>
+                        </form>
+                    @else
+                        <p class="text-sm text-yellow-600 mt-2">Já será notificado quando este livro estiver disponível.</p>
+                    @endif
+
                 @endif
             @endif
         @endauth

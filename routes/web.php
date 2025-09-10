@@ -15,12 +15,10 @@ use App\Http\Controllers\RequisicaoController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\GoogleBooksController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AlertaLivroController;
 
 /**
  * 🔹 Rota “ponte” para moderação de reviews
- * - Guarda o destino na sessão
- * - Se já for admin autenticado, vai direto
- * - Se não, redireciona para login
  */
 Route::get('/moderacao/reviews', function () {
     if (auth()->check() && auth()->user()->isAdmin()) {
@@ -41,6 +39,9 @@ Route::middleware([
 
     /** 📚 Livros */
     Route::resource('livros', LivroController::class);
+
+    /** 🔔 Alerta de disponibilidade de livro */
+    Route::post('/livros/{livro}/alerta', [AlertaLivroController::class, 'store'])->name('alertas.store');
 
     /** ✍️ Autores */
     Route::resource('autores', AutorController::class)->parameters([
@@ -93,10 +94,7 @@ Route::middleware([
 
     /** 💬 Reviews */
     Route::middleware(['auth'])->group(function () {
-        // Submissão de review pelo cidadão
         Route::post('/requisicoes/{requisicao}/review', [ReviewController::class, 'store'])->name('reviews.store');
-
-        // Moderação de reviews pelo admin
         Route::get('/admin/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/admin/reviews/{review}', [ReviewController::class, 'update'])->name('reviews.update');
     });
