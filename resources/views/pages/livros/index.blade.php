@@ -64,6 +64,9 @@
         </tr>
     </thead>
     <tbody>
+        <div class="mt-4">
+            {{ $livros->links() }}
+        </div>
         @foreach($livros as $livro)
         @php
             $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
@@ -119,7 +122,7 @@
                         @endif
 
                         @if(auth()->user()->isAdmin())
-                            <a href="{{ route('livros.edit', $livro) }}" class="btn btn-sm btn-warning">✏️ Editar</a>
+                            <a href="{{ route('livros.edit', ['livro' => $livro->id, 'page' => request('page')]) }}" class="btn btn-sm btn-primary">✏️ Editar</a>
                         @endif
                     @endauth
                 </div>

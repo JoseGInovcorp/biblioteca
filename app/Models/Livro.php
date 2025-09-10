@@ -22,22 +22,16 @@ class Livro extends Model
         });
     }
 
-    public static function extractKeywordsFromDescricao(?string $descricao, int $max = 15): array
+    /**
+     * Lista de stopwords PT para filtrar keywords irrelevantes.
+     */
+    protected static function stopwordsPt(): array
     {
-        if (empty($descricao)) {
-            return [];
-        }
-
-        // Normalização robusta
-        $texto = Str::ascii(strip_tags($descricao));
-        $texto = mb_strtolower($texto);
-        $texto = preg_replace('/[^a-z\s]/u', ' ', $texto);
-        $texto = preg_replace('/\s+/', ' ', $texto);
-
-        $palavras = preg_split('/\s+/', trim($texto)) ?: [];
-
-        $stopwords = [
+        return [
+            // Artigos, preposições, conjunções
             'a',
+            'à',
+            'às',
             'o',
             'os',
             'as',
@@ -57,163 +51,206 @@ class Livro extends Model
             'nas',
             'por',
             'para',
+            'com',
+            'sem',
+            'sobre',
+            'entre',
+            'até',
+            'após',
+            'antes',
+            'desde',
+            'contra',
+            'perante',
+            'trás',
+            'sob',
             'e',
             'ou',
             'mas',
+            'nem',
             'que',
             'se',
-            'com',
-            'sem',
-            'ao',
-            'aos',
-            'à',
-            'às',
-            'num',
-            'numa',
-            'nuns',
-            'numas',
-            'sobre',
-            'entre',
             'como',
-            'ser',
-            'estar',
-            'ter',
-            'haver',
-            'foi',
-            'era',
-            'são',
-            'é',
+            'também',
+            'quando',
+            'onde',
+            'quanto',
+
+            // Pronomes e determinantes
+            'eu',
+            'tu',
+            'ele',
+            'ela',
+            'nós',
+            'vos',
+            'eles',
+            'elas',
+            'me',
+            'te',
+            'se',
+            'nos',
+            'vos',
+            'lhe',
+            'lhes',
+            'minha',
+            'meu',
+            'minhas',
+            'meus',
+            'tua',
+            'teu',
+            'tuas',
+            'teus',
             'sua',
             'seu',
             'suas',
             'seus',
-            'ela',
-            'ele',
-            'eles',
-            'elas',
             'este',
             'esta',
-            'estes',
-            'estas',
-            'isso',
             'isto',
             'aquele',
             'aquela',
-            'aqueles',
-            'aquelas',
-            'tambem',
-            'também',
-            'muito',
-            'muitos',
-            'muita',
-            'muitas',
-            'pouco',
-            'pouca',
-            'poucos',
-            'poucas',
-            'mais',
-            'menos',
-            'já',
-            'ainda',
-            'quando',
-            'onde',
-            'porque',
-            'porquê',
-            'quem',
-            'qual',
-            'quais',
+            'aquilo',
+            'algum',
+            'alguma',
+            'alguns',
+            'algumas',
             'todo',
             'toda',
             'todos',
             'todas',
             'cada',
-            'nessa',
-            'nesse',
-            'nesta',
-            'neste',
-            'deste',
-            'desta',
-            'seja',
-            'sejam',
-            'sendo',
-            'tanto',
-            'tão',
-            'lhe',
-            'lhes',
-            'me',
-            'te',
-            'nos',
-            'vos',
-            'dela',
-            'dele',
-            'delas',
-            'deles',
+            'qualquer',
+
+            // Verbos auxiliares e genéricos
+            'ser',
+            'estar',
+            'ter',
+            'haver',
+            'fazer',
+            'poder',
+            'dever',
+            'querer',
+            'dizer',
+            'ver',
+            'saber',
+            'ficar',
+            'ir',
+            'vir',
+            'dar',
+            'passar',
+            'pode',
+            'não',
+            'tem',
+            'há',
+            'foi',
+            'era',
+            'são',
+            'será',
+            'vai',
+            'vais',
+            'vamos',
+            'vão',
+            'está',
+            'estavam',
+            'estive',
+            'tinha',
+
+            // Termos genéricos de baixo valor semântico
+            'vida',
+            'história',
+            'coisa',
+            'caso',
+            'tempo',
+            'mundo',
+            'ano',
+            'dia',
+            'noite',
+            'casa',
+            'pessoa',
+            'gente'
         ];
+    }
 
-        $filtradas = array_values(array_filter($palavras, function ($w) use ($stopwords) {
-            return mb_strlen($w) >= 3 &&
-                preg_match('/[aeiou]/', $w) && // exige pelo menos uma vogal
-                !in_array($w, $stopwords, true);
-        }));
-
-        if (empty($filtradas)) {
+    /**
+     * Extrai keywords limpas da descrição.
+     */
+    public static function extractKeywordsFromDescricao(?string $descricao, int $max = 15): array
+    {
+        if (empty($descricao)) {
             return [];
         }
 
-        $freq = array_count_values($filtradas);
-        arsort($freq);
-        $top = array_slice(array_keys($freq), 0, $max);
+        $texto = Str::of(strip_tags($descricao))
+            ->lower()
+            ->ascii()
+            ->replaceMatches('/[^a-z0-9\s]/', ' ')
+            ->replaceMatches('/\s+/', ' ')
+            ->value();
 
-        return array_values($top);
+        $tokens = array_filter(explode(' ', $texto), function ($t) {
+            return $t !== '' && !preg_match('/\d/', $t) && mb_strlen($t) >= 4;
+        });
+
+        $stops = array_flip(static::stopwordsPt());
+        $filtered = array_values(array_filter($tokens, function ($t) use ($stops) {
+            return !isset($stops[$t]);
+        }));
+
+        if (empty($filtered)) {
+            return [];
+        }
+
+        $freq = [];
+        foreach ($filtered as $t) {
+            $freq[$t] = ($freq[$t] ?? 0) + 1;
+        }
+        arsort($freq);
+
+        return array_slice(array_keys($freq), 0, $max);
     }
 
+    /**
+     * Obtém livros relacionados com base em keywords e autores.
+     */
     public function relacionados(int $limit = 5)
     {
         $myKeywords = $this->keywords ?? [];
-        $autorIds = $this->autores->pluck('id')->all();
+        $autorIds   = $this->autores->pluck('id')->all();
+        $generoIds  = $this->generos->pluck('id')->all();
 
-        // Pré-seleção por keywords
-        $query = self::query()
+        // Base de candidatos: todos os outros livros com keywords
+        $candidatos = self::query()
             ->where('id', '!=', $this->id)
-            ->whereNotNull('keywords');
+            ->whereNotNull('keywords')
+            ->with(['editora', 'autores', 'generos'])
+            ->get();
 
-        $likeTerms = array_slice($myKeywords, 0, 8);
-        $query->where(function ($q) use ($likeTerms) {
-            foreach ($likeTerms as $kw) {
-                $q->orWhere('keywords', 'LIKE', '%' . $kw . '%');
-            }
+        // Grupo: mesmo autor
+        $mesmoAutor = $candidatos->filter(function ($livro) use ($autorIds) {
+            return $livro->autores->pluck('id')->intersect($autorIds)->isNotEmpty();
         });
 
-        $candidatos = $query->with(['editora', 'autores'])->take(50)->get();
-
-        // Score por interseção real de keywords
-        $scored = $candidatos->map(function ($livro) use ($myKeywords) {
-            $score = count(array_intersect($myKeywords, $livro->keywords ?? []));
-            return ['livro' => $livro, 'score' => $score];
-        })->filter(fn($x) => $x['score'] >= 2);
-
-        $ordenados = $scored->sortByDesc(function ($x) {
-            return [$x['score'], optional($x['livro']->created_at)->timestamp];
-        })->pluck('livro');
-
-        // Livros do mesmo autor (prioridade máxima)
-        $doMesmoAutor = collect();
-        if (!empty($autorIds)) {
-            $doMesmoAutor = self::whereHas('autores', function ($q) use ($autorIds) {
-                $q->whereIn('autores.id', $autorIds);
+        // Grupo: semelhantes no tema
+        $mesmoTema = $candidatos
+            ->reject(function ($livro) use ($autorIds) {
+                // exclui os do mesmo autor
+                return $livro->autores->pluck('id')->intersect($autorIds)->isNotEmpty();
             })
-                ->where('id', '!=', $this->id)
-                ->with(['editora', 'autores'])
-                ->get();
-        }
+            ->filter(function ($livro) use ($myKeywords, $generoIds) {
+                $overlap = count(array_intersect($myKeywords, $livro->keywords ?? []));
+                $temGeneroEmComum = !empty($generoIds) &&
+                    $livro->generos->pluck('id')->intersect($generoIds)->isNotEmpty();
 
-        // Junta: primeiro mesmo autor, depois conteúdo semelhante
-        return $doMesmoAutor
-            ->merge($ordenados)
+                // Critério: ou partilha género, ou tem keywords suficientes em comum
+                return $temGeneroEmComum || $overlap >= 3;
+            });
+
+        return $mesmoAutor
+            ->merge($mesmoTema)
             ->unique('id')
             ->take($limit)
             ->values();
     }
+
 
     public function autores()
     {
@@ -233,5 +270,10 @@ class Livro extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function generos()
+    {
+        return $this->belongsToMany(Genero::class, 'genero_livro');
     }
 }

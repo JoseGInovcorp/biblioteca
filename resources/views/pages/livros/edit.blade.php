@@ -7,8 +7,8 @@
         {{ session('warning') }}
     </div>
 @endif
-<a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar para lista de livros</a>
-<form method="POST" action="{{ route('livros.update', $livro) }}" enctype="multipart/form-data">
+<a href="{{ route('livros.index', ['page' => request('page', 1)]) }}" class="btn btn-outline btn-secondary">⬅️ Voltar para lista de livros</a>
+<form method="POST" action="{{ route('livros.update', ['livro' => $livro->id, 'page' => request('page', 1)]) }}" enctype="multipart/form-data">
     @include('pages.livros._form')
 </form>
 @endsection

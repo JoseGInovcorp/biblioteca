@@ -1,5 +1,6 @@
 @csrf
-@if(isset($livro))
+<input type="hidden" name="page" value="{{ request('page', 1) }}">
+@if(isset($livro) && $livro->exists)
     @method('PUT')
 @endif
 
@@ -69,6 +70,23 @@
 </div>
 
 <div>
+    <label class="label">Géneros</label>
+    <select name="generos[]" multiple id="generos-select" class="tom-select w-full">
+        @foreach($generos as $genero)
+            <option value="{{ $genero->id }}"
+                {{ collect(old('generos', $livro->generos->pluck('id') ?? []))->contains($genero->id) ? 'selected' : '' }}>
+                {{ $genero->nome }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="mt-2">
+    <label class="label">Ou criar novo género</label>
+    <input type="text" name="novo_genero" id="novo_genero" value="{{ old('novo_genero') }}" class="input input-bordered w-full" placeholder="Digite o nome do novo género">
+</div>
+
+<div>
     <label class="label">Descrição</label>
     <textarea name="descricao" class="textarea textarea-bordered w-full">{{ old('descricao', $livro->descricao ?? '') }}</textarea>
 </div>
@@ -94,7 +112,7 @@
 
 <div class="flex gap-2 pt-4">
     <button class="btn btn-primary">{{ isset($livro) ? 'Atualizar' : 'Criar' }}</button>
-    <a href="{{ route('livros.index') }}" class="btn btn-outline btn-secondary">⬅️ Voltar</a>
+    <a href="{{ route('livros.index', ['page' => request('page', 1)]) }}" class="btn btn-outline btn-secondary">⬅️ Voltar</a>
 </div>
 
 {{-- Script para limpar campos --}}

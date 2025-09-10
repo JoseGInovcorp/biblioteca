@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Livro;
 use App\Models\Editora;
 use App\Models\Autor;
+use App\Models\Genero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -58,6 +59,7 @@ class LivroController extends Controller
 
         $editoras = Editora::all();
         $autores  = Autor::all();
+        $generos  = Genero::orderBy('nome')->get();
 
         // Injetar sugestões vindas da API (old input)
         if (session()->hasOldInput()) {
@@ -79,8 +81,12 @@ class LivroController extends Controller
             }
         }
 
-        return view('pages.livros.create', compact('editoras', 'autores'));
+        // Passar um Livro vazio para o _form não rebentar
+        $livro = new Livro();
+
+        return view('pages.livros.create', compact('livro', 'editoras', 'autores', 'generos'));
     }
+
 
     public function store(Request $request)
     {
@@ -180,6 +186,7 @@ class LivroController extends Controller
         $livro->load([
             'editora',
             'autores',
+            'generos',
             'reviews' => function ($query) {
                 $query->where('estado', 'ativo')->with('user');
             }
@@ -214,6 +221,7 @@ class LivroController extends Controller
             'livro'    => $livro,
             'editoras' => Editora::all(),
             'autores'  => Autor::all(),
+            'generos'  => Genero::orderBy('nome')->get(),
         ]);
     }
 
@@ -235,17 +243,27 @@ class LivroController extends Controller
             $request->merge(['editora_id' => $editora->id]);
         }
 
-        // Validação: exige editora_id OU nova_editora
+        // Se vier novo_genero, cria e adiciona à lista
+        if ($request->filled('novo_genero')) {
+            $novoGenero = Genero::firstOrCreate(['nome' => $request->novo_genero]);
+            $generosIds = $request->input('generos', []);
+            $generosIds[] = $novoGenero->id;
+            $request->merge(['generos' => $generosIds]);
+        }
+
+        // Validação
         $validated = $request->validate([
             'nome'         => 'required|string|max:255',
             'isbn'         => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
             'editora_id'   => 'required_without:nova_editora|exists:editoras,id',
             'nova_editora' => 'required_without:editora_id|string|nullable',
-            'descricao' => 'nullable|string',
+            'descricao'    => 'nullable|string',
             'preco'        => 'required|numeric',
             'imagem_capa'  => 'nullable',
             'autores'      => 'array',
             'autores.*'    => 'exists:autores,id',
+            'generos'      => 'array',
+            'generos.*'    => 'exists:generos,id',
         ]);
 
         // 📷 Capa: upload manual OU URL (substitui a anterior)
@@ -275,13 +293,21 @@ class LivroController extends Controller
             $validated['imagem_capa'] = $caminhoCapa;
         }
 
+        // Atualiza dados do livro
         $livro->update($validated);
 
+        // Atualiza autores
         if (!empty($validated['autores'])) {
             $livro->autores()->sync($validated['autores']);
         }
 
-        return redirect()->route('livros.index')->with('success', 'Livro atualizado com sucesso!');
+        // Atualiza géneros (muitos-para-muitos)
+        if (!empty($validated['generos'])) {
+            $livro->generos()->sync($validated['generos']);
+        }
+
+        return redirect()->route('livros.index', ['page' => $request->input('page', 1)])
+            ->with('success', 'Livro atualizado com sucesso.');
     }
 
     public function destroy(Livro $livro)

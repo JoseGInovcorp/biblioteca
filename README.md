@@ -541,6 +541,78 @@ Aplicação de gestão de biblioteca desenvolvida em Laravel com Jetstream, Live
 -   Confirmação de prioridade para livros do mesmo autor.
 -   Teste da separação visual na interface.
 
+---
+
+### Dia 18 — 📌 Ajustes no fluxo de criação/edição + Integração com Google Books + Navegação persistente
+
+**O que foi feito:**
+
+-   Corrigido erro `"The PUT method is not supported for route livros"` ao criar novos livros.
+-   Ajustado o `_form.blade.php` para funcionar corretamente tanto em criação como edição.
+-   Protegidos acessos a `$livro` com `optional()` e validações de existência.
+-   Corrigida a lógica de pré-seleção de géneros, autores e editora no formulário.
+-   Adicionado suporte à criação manual de novos géneros e editoras.
+-   Melhorada a integração com a Google Books API:
+    -   Adicionada chave de API via `.env`.
+    -   Otimizados parâmetros da chamada: `maxResults`, `fields`, `printType`, `langRestrict`.
+    -   Reduzidas falhas e respostas incompletas.
+-   Ajustada lógica de sugestão de géneros vindos da API para manter compatibilidade com a BD.
+-   Reorganizada a página de detalhes (`livros.show`) com layout em duas colunas:
+    -   Capa à esquerda.
+    -   Detalhes, descrição e opiniões à direita.
+    -   Espaçamento melhorado entre elementos.
+-   Adicionada paginação dupla na listagem de livros (`index`):
+    -   Exibição da navegação tanto no topo como no fundo da página.
+-   Implementada persistência da página atual ao navegar entre listagem, detalhes e edição:
+    -   Botões “Voltar” respeitam o número da página.
+    -   Após editar, o utilizador regressa à mesma página da listagem.
+    -   Parâmetro `page` transmitido via rota, campo oculto e redirecionamento.
+
+**Motivo:**
+
+-   Eliminar erros de navegação e inconsistências no formulário.
+-   Melhorar a experiência do utilizador ao manter o contexto de navegação.
+-   Tornar a integração com a API mais robusta e eficiente.
+-   Aproveitar melhor o espaço visual na página de detalhes.
+-   Garantir que os dados vindos da API são corretamente tratados e integrados.
+
+**Controller:**
+
+-   `LivroController@create`, `@edit` e `@update` ajustados para aceitar e preservar `page`.
+-   Redirecionamento após atualização respeita a página anterior.
+
+**View `livros.index`:**
+
+-   Adicionada paginação no topo da listagem.
+-   Botão “Editar” inclui parâmetro `page`.
+
+**View `livros.edit`:**
+
+-   Rota do formulário inclui `page`.
+-   Botão “Voltar” redireciona para a página correta.
+
+**View `_form.blade.php`:**
+
+-   Campo oculto `page` incluído no formulário.
+-   Ajustes na lógica de pré-preenchimento de campos vindos da API.
+
+**View `livros.show`:**
+
+-   Layout reorganizado em duas colunas.
+-   Espaçamento ajustado entre disponibilidade e imagem.
+-   Descrição e opiniões movidas para a coluna lateral.
+
+**Testes realizados:**
+
+-   Criação e edição de livros sem erros.
+-   Validação da navegação entre páginas da listagem.
+-   Verificação da persistência da página após editar ou visualizar detalhes.
+-   Teste da integração com a Google Books API com chave ativa.
+-   Visualização correta de géneros e autores vindos da API.
+-   Teste da nova estrutura visual na página de detalhes.
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).
