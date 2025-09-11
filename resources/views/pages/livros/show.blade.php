@@ -3,7 +3,8 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">📖 {{ $livro->nome }}</h2>
 
-<a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
+<a href="{{ request()->query('from', route('livros.index')) }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
+
 
 @php
     $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();

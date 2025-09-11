@@ -109,7 +109,7 @@
             </td>
             <td class="min-w-[140px]">
                 <div class="flex gap-2 items-center">
-                    <a href="{{ route('livros.show', $livro) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+                    <a href="{{ route('livros.show', ['livro' => $livro->id, 'from' => request()->fullUrl()]) }}" class="btn btn-sm btn-info">👁️ Ver</a>
 
                     @auth
                         @if(auth()->user()->isCidadao())
