@@ -630,6 +630,15 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 19 — 📌 Ajustes finais e correções
+
+-   Ocultação do botão “🔔 Avisar-me quando disponível” para o cidadão que já tem o livro requisitado
+-   Correção da lógica de verificação de posse do livro (`cidadao_id` em vez de `user_id`)
+-   Ajuste do botão “⬅️ Voltar” na página do livro com fallback para `livros.index` quando `url()->previous()` não é válido
+-   Testes manuais ao fluxo de alerta e requisição para garantir consistência na experiência do utilizador
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

@@ -3,7 +3,7 @@
 @section('content')
 <h2 class="text-2xl font-bold mb-4">📖 {{ $livro->nome }}</h2>
 
-<a href="{{ url()->previous() }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
+<a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('livros.index') }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
 @php
     $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
@@ -55,9 +55,17 @@
                     @php
                         $alerta = $livro->alertas()->where('user_id', auth()->id())->latest()->first();
                         $mostrarBotaoAlerta = !$alerta || $alerta->notificado_em !== null;
+
+                        $requisitadoPorMim = $livro->requisicoes()
+                            ->where('status', 'ativa')
+                            ->where('cidadao_id', auth()->id()) // ← ajustado aqui
+                            ->exists();
                     @endphp
 
-                    @if($mostrarBotaoAlerta)
+
+                    @if($requisitadoPorMim)
+                        <p class="text-sm text-green-600 mt-2">Este livro está atualmente na sua posse.</p>
+                    @elseif($mostrarBotaoAlerta)
                         <form method="POST" action="{{ route('alertas.store', $livro) }}" class="mt-2">
                             @csrf
                             <button class="btn btn-warning">🔔 Avisar-me quando disponível</button>
@@ -65,7 +73,6 @@
                     @else
                         <p class="text-sm text-yellow-600 mt-2">Já será notificado quando este livro estiver disponível.</p>
                     @endif
-
                 @endif
             @endif
         @endauth
