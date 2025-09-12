@@ -639,6 +639,18 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 20 — 📌 Validação Final e Apresentação
+
+-   Realização de testes manuais aos três desafios:
+    -   Verificação do fluxo completo de criação, moderação e visualização de reviews
+    -   Testes à lógica de livros relacionados com base em palavras-chave e autor
+    -   Simulação do alerta de disponibilidade com envio de email e comportamento do botão
+-   Confirmação da navegação entre páginas de detalhe e retorno à listagem com o parâmetro `from`
+-   Validação da experiência do utilizador em diferentes perfis (Cidadão e Admin)
+-   Gravação do vídeo de apresentação com demonstração funcional dos três desafios
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).
@@ -670,5 +682,9 @@ O vídeo de demonstração do projeto pode ser visto aqui para cada semana:
 ---
 
 [📺 Ver vídeo relativo à terceira semana no Google Drive](https://drive.google.com/file/d/1fgwtMZMhHvDYDBg1g7JZI49P_-Jifez8/view?usp=sharing)
+
+---
+
+[📺 Ver vídeo relativo à quarta semana no Google Drive](https://drive.google.com/file/d/196tbGmfITc1uApwN98wZK1ixxaDuTI19/view?usp=sharing)
 
 Desenvolvido por José G. durante estágio na InovCorp.
