@@ -651,6 +651,34 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 22 — 🛒 Carrinho, Moradas de Entrega e Página de Pagamento (pré‑Stripe)
+
+-   Implementação completa do **carrinho de compras**:
+    -   Adição de livros com incremento automático de quantidade
+    -   Atualização de quantidades com validação mínima
+    -   Remoção de itens individualmente
+    -   Cálculo automático do subtotal
+-   Criação do **modelo `EnderecoEntrega`** e respetiva tabela:
+    -   Campos: `user_id`, `nome`, `telefone`, `morada`, `codigo_postal`, `localidade`, `pais`
+    -   Associação ao utilizador autenticado
+-   Fluxo de **inserção e edição de morada**:
+    -   Opção de guardar morada para reutilização futura ou usar apenas nesta compra
+    -   Morada guardada na sessão para checkout atual
+    -   Edição com formulário pré‑preenchido e validação de propriedade
+-   **Integração da morada no carrinho**:
+    -   Exibição da morada mais recente no carrinho, se existir
+    -   Botão “Editar Morada” ou “Inserir Morada de Entrega” conforme o caso
+-   **Melhorias de interface**:
+    -   Botão “Voltar ao Carrinho” no formulário de morada
+    -   Resumo da encomenda na coluna direita da página de morada (responsivo)
+    -   Queries de carrinho movidas para o controlador para manter o Blade limpo
+-   Criação da **página de pagamento** (`checkout.pagamento`):
+    -   Mostra morada de entrega (sessão ou BD) e resumo da encomenda
+    -   Botão placeholder “Pagar com Stripe” (integração a realizar na próxima fase)
+    -   Botão “Voltar ao Carrinho”
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

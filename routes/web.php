@@ -16,6 +16,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\GoogleBooksController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AlertaLivroController;
+use App\Http\Controllers\CarrinhoController;
+use App\Http\Controllers\EnderecoEntregaController;
 
 /**
  * 🔹 Rota “ponte” para moderação de reviews
@@ -98,4 +100,21 @@ Route::middleware([
         Route::get('/admin/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/admin/reviews/{review}', [ReviewController::class, 'update'])->name('reviews.update');
     });
+
+    // 🛒 Carrinho
+    Route::post('/carrinho/add/{livro}', [CarrinhoController::class, 'add'])->name('carrinho.add');
+    Route::get('/carrinho', [CarrinhoController::class, 'index'])->name('carrinho.index');
+    Route::delete('/carrinho/{livro}', [CarrinhoController::class, 'remove'])->name('carrinho.remove');
+    Route::patch('/carrinho/{livro}', [CarrinhoController::class, 'update'])->name('carrinho.update');
+
+    // 📦 Endereços de entrega
+    Route::get('/checkout/endereco', [EnderecoEntregaController::class, 'create'])->name('checkout.endereco');
+    Route::post('/checkout/endereco', [EnderecoEntregaController::class, 'store'])->name('checkout.endereco.store');
+    Route::get('/checkout/endereco/{endereco}/editar', [EnderecoEntregaController::class, 'edit'])->name('checkout.endereco.edit');
+    Route::put('/checkout/endereco/{endereco}', [EnderecoEntregaController::class, 'update'])->name('checkout.endereco.update');
+
+    // 💳 Página de pagamento (simulada)
+    Route::get('/checkout/pagamento', function () {
+        return view('pages.checkout.pagamento');
+    })->name('checkout.pagamento');
 });

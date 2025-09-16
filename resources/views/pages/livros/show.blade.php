@@ -48,6 +48,13 @@
 
         @auth
             @if(auth()->user()->isCidadao())
+                {{-- Botão para adicionar ao carrinho --}}
+                <form method="POST" action="{{ route('carrinho.add', $livro) }}" class="mt-2">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">🛒 Adicionar ao Carrinho</button>
+                </form>
+
+                {{-- Botão de requisição (mantém a tua lógica atual) --}}
                 @if($disponivel)
                     <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}" class="btn btn-success mt-2">📦 Requisitar</a>
                 @else
@@ -59,10 +66,9 @@
 
                         $requisitadoPorMim = $livro->requisicoes()
                             ->where('status', 'ativa')
-                            ->where('cidadao_id', auth()->id()) // ← ajustado aqui
+                            ->where('cidadao_id', auth()->id())
                             ->exists();
                     @endphp
-
 
                     @if($requisitadoPorMim)
                         <p class="text-sm text-green-600 mt-2">Este livro está atualmente na sua posse.</p>

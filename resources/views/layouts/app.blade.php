@@ -14,6 +14,19 @@
 
     @auth
         <div class="flex items-center gap-2">
+            {{-- Botão do carrinho (apenas para cidadãos) --}}
+            @if(auth()->user()->isCidadao())
+                @php
+                    $totalUnidades = \App\Models\CartItem::where('user_id', auth()->id())->sum('quantity');
+                @endphp
+                <a href="{{ route('carrinho.index') }}" class="btn btn-sm btn-outline">
+                    🛒 Carrinho
+                    @if($totalUnidades > 0)
+                        <span class="badge badge-primary">{{ $totalUnidades }}</span>
+                    @endif
+                </a>
+            @endif
+
             <a href="{{ route('profile.show') }}" class="btn btn-sm btn-outline">Perfil</a>
             <span class="text-sm">Olá, {{ Auth::user()->name }}</span>
             <form method="POST" action="{{ route('logout') }}">
@@ -30,7 +43,6 @@
         </div>
     @endguest
 </header>
-
 
 <main class="flex-grow container mx-auto p-4">
     @yield('content')
