@@ -679,6 +679,48 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 23 — 💳 Integração Stripe, Criação de Encomendas e Dashboard Administrativo
+
+-   Implementação da **integração completa com Stripe Checkout**:
+
+    -   Criação da sessão Stripe com os itens do carrinho
+    -   Redirecionamento automático para Stripe e retorno para página de sucesso ou cancelamento
+    -   Validação do carrinho antes de iniciar o pagamento
+
+-   Gestão da **morada de entrega no fluxo Stripe**:
+
+    -   Envio da morada como `hidden inputs` no formulário de pagamento
+    -   Armazenamento da morada na sessão antes de criar a sessão Stripe
+    -   Fallback para morada guardada na BD caso a sessão esteja vazia no retorno
+
+-   Criação automática da **encomenda após pagamento**:
+
+    -   Geração da encomenda com estado inicial `paga`
+    -   Associação dos livros comprados com quantidade e preço unitário
+    -   Limpeza do carrinho e da sessão após sucesso
+
+-   Páginas de **sucesso** (`checkout.sucesso`) e **cancelamento** (`checkout.cancelado`):
+
+    -   Feedback visual após pagamento
+    -   Garantia de consistência no estado da encomenda
+
+-   Atualização do **dashboard administrativo**:
+
+    -   Contadores dinâmicos para:
+        -   Total de livros
+        -   Total de utilizadores
+        -   Resenhas pendentes
+        -   Requisições ativas
+        -   Encomendas pendentes (em progresso)
+    -   Visualização de encomendas com estado “paga” e respetivos detalhes
+
+-   Melhorias na **interface de pagamento**:
+    -   Verificação da existência de morada antes de mostrar botão Stripe
+    -   Redirecionamento automático para preenchimento de morada se necessário
+    -   Garantia de que o utilizador nunca entra no Stripe sem dados essenciais
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

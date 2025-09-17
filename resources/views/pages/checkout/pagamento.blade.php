@@ -69,13 +69,30 @@
                     Subtotal: €{{ number_format($subtotal, 2, ',', '.') }}
                 </p>
 
-                {{-- Botão para Stripe (placeholder) --}}
-                <form method="POST" action="#">
-                    @csrf
-                    <button type="submit" class="btn btn-primary w-full">
-                        💳 Pagar com Stripe
-                    </button>
-                </form>
+                {{-- Se houver morada, mostra botão de pagamento; caso contrário, alerta --}}
+                @if($morada)
+                    <form method="POST" action="{{ route('checkout.stripe') }}">
+                        @csrf
+                        <input type="hidden" name="nome" value="{{ $morada['nome'] ?? '' }}">
+                        <input type="hidden" name="telefone" value="{{ $morada['telefone'] ?? '' }}">
+                        <input type="hidden" name="morada" value="{{ $morada['morada'] ?? '' }}">
+                        <input type="hidden" name="codigo_postal" value="{{ $morada['codigo_postal'] ?? '' }}">
+                        <input type="hidden" name="localidade" value="{{ $morada['localidade'] ?? '' }}">
+                        <input type="hidden" name="pais" value="{{ $morada['pais'] ?? '' }}">
+
+                        <button type="submit" class="btn btn-primary w-full">
+                            💳 Pagar com Stripe
+                        </button>
+                    </form>
+                @else
+                    <p class="text-error text-center font-semibold mt-4">
+                        ⚠️ É necessário definir uma morada de entrega antes de prosseguir para o pagamento.
+                    </p>
+                    <a href="{{ route('checkout.endereco') }}" class="btn btn-success w-full mt-3">
+                        ➕ Adicionar Morada
+                    </a>
+                @endif
+
 
                 {{-- Voltar ao carrinho --}}
                 <a href="{{ route('carrinho.index') }}" class="btn btn-outline btn-secondary w-full mt-3">

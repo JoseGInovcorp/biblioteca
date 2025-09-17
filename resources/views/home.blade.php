@@ -68,6 +68,21 @@
                         </div>
                     </div>
                 </div>
+                
+                {{-- Gestão de Encomendas --}}
+                <div class="card bg-base-200 shadow relative">
+                    <div class="card-body">
+                        <h2 class="card-title">📦 Encomendas</h2>
+                        <p class="text-sm text-gray-600">Consultar todas as encomendas efetuadas pelos cidadãos.</p>
+                        <a href="{{ route('admin.encomendas.index') }}" class="btn btn-outline mt-3">📦 Ver Encomendas</a>
+                    </div>
+
+                    @if($encomendasPendentes > 0)
+                        <div class="absolute top-2 right-2 bg-error text-white text-xs font-bold px-2 py-1 rounded-full">
+                            {{ $encomendasPendentes }} pendente{{ $encomendasPendentes > 1 ? 's' : '' }}
+                        </div>
+                    @endif
+                </div>
             </div>
         @endif
     </div>

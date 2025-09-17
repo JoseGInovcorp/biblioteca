@@ -18,6 +18,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AlertaLivroController;
 use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\EnderecoEntregaController;
+use App\Http\Controllers\PagamentoController;
+use App\Http\Controllers\Admin\EncomendaController;
 
 /**
  * 🔹 Rota “ponte” para moderação de reviews
@@ -117,4 +119,10 @@ Route::middleware([
     Route::get('/checkout/pagamento', function () {
         return view('pages.checkout.pagamento');
     })->name('checkout.pagamento');
+    Route::post('/checkout/stripe', [PagamentoController::class, 'checkout'])->name('checkout.stripe');
+    Route::get('/checkout/sucesso', [PagamentoController::class, 'sucesso'])->name('checkout.sucesso');
+    Route::get('/checkout/cancelado', [PagamentoController::class, 'cancelado'])->name('checkout.cancelado');
+
+    // 📋 Encomendas (Admin)
+    Route::get('/admin/encomendas', [EncomendaController::class, 'index'])->name('admin.encomendas.index');
 });
