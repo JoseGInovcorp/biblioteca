@@ -20,6 +20,8 @@ use App\Http\Controllers\CarrinhoController;
 use App\Http\Controllers\EnderecoEntregaController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\Admin\EncomendaController;
+use App\Http\Controllers\Admin\LivroStockController;
+
 
 /**
  * 🔹 Rota “ponte” para moderação de reviews
@@ -125,4 +127,9 @@ Route::middleware([
 
     // 📋 Encomendas (Admin)
     Route::get('/admin/encomendas', [EncomendaController::class, 'index'])->name('admin.encomendas.index');
+    Route::get('/admin/encomendas/pendentes', [EncomendaController::class, 'pendentes'])->name('admin.encomendas.pendentes');
+    Route::get('/admin/encomendas/pagas', [EncomendaController::class, 'pagas'])->name('admin.encomendas.pagas');
+
+    // 📉 Gestão de stock de livros (Admin )
+    Route::get('/admin/livros/stock', [LivroStockController::class, 'index'])->name('admin.livros.stock');
 });

@@ -17,6 +17,8 @@ class Kernel extends ConsoleKernel
 
         // 💡 Para testar rapidamente podes usar:
         // $schedule->command('requisicoes:enviar-lembretes')->everyMinute();
+
+        $schedule->job(new \App\Jobs\VerificarCarrinhosAbandonados)->hourly();
     }
 
     /**

@@ -10,10 +10,8 @@
             <h3 class="font-bold text-lg mb-4">📍 Morada de Entrega</h3>
 
             @php
-                // Primeiro tenta buscar da sessão (checkout atual)
                 $morada = session('morada_checkout');
 
-                // Se não existir na sessão, tenta buscar da BD
                 if (!$morada) {
                     $moradaModel = \App\Models\EnderecoEntrega::where('user_id', auth()->id())
                         ->latest()
@@ -28,7 +26,7 @@
                 <p>{{ $morada['nome'] }} — {{ $morada['telefone'] }}</p>
                 <p>{{ $morada['morada'] }}, {{ $morada['codigo_postal'] }} {{ $morada['localidade'] }}</p>
                 <p>{{ $morada['pais'] }}</p>
-                <a href="{{ isset($moradaModel) ? route('checkout.endereco.edit', $moradaModel) : route('checkout.endereco') }}" 
+                <a href="{{ isset($moradaModel) ? route('checkout.endereco.edit', $moradaModel) : route('checkout.endereco') }}"
                    class="btn btn-sm btn-outline mt-3">
                     ✏️ Alterar Morada
                 </a>
@@ -47,10 +45,8 @@
             <h3 class="font-bold text-lg mb-4">🛒 Resumo da Encomenda</h3>
 
             @php
-                $itens = \App\Models\CartItem::with('livro')
-                    ->where('user_id', auth()->id())
-                    ->get();
-                $subtotal = $itens->sum(fn($i) => $i->quantity * $i->livro->preco);
+                $itens = \App\Models\CartItem::where('user_id', auth()->id())->get();
+                $subtotal = $itens->sum(fn($i) => $i->quantity * $i->preco_unitario);
             @endphp
 
             @if($itens->isEmpty())
@@ -58,9 +54,12 @@
             @else
                 <ul class="divide-y divide-gray-300 mb-4">
                     @foreach($itens as $item)
-                        <li class="py-2 flex justify-between">
-                            <span>{{ $item->livro->nome }} × {{ $item->quantity }}</span>
-                            <span>€{{ number_format($item->quantity * $item->livro->preco, 2, ',', '.') }}</span>
+                        <li class="py-2 flex justify-between items-center">
+                            <div>
+                                <span class="block font-medium">{{ $item->livro->nome }}</span>
+                                <span class="text-sm text-gray-500">{{ ucfirst($item->tipo_encomenda) }} × {{ $item->quantity }}</span>
+                            </div>
+                            <span>€{{ number_format($item->quantity * $item->preco_unitario, 2, ',', '.') }}</span>
                         </li>
                     @endforeach
                 </ul>
@@ -69,7 +68,6 @@
                     Subtotal: €{{ number_format($subtotal, 2, ',', '.') }}
                 </p>
 
-                {{-- Se houver morada, mostra botão de pagamento; caso contrário, alerta --}}
                 @if($morada)
                     <form method="POST" action="{{ route('checkout.stripe') }}">
                         @csrf
@@ -93,8 +91,6 @@
                     </a>
                 @endif
 
-
-                {{-- Voltar ao carrinho --}}
                 <a href="{{ route('carrinho.index') }}" class="btn btn-outline btn-secondary w-full mt-3">
                     ⬅️ Voltar ao Carrinho
                 </a>

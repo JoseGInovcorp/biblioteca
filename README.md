@@ -721,6 +721,52 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 24 — 📦 Notificações, Carrinho, Encomendas e Gestão de Stock
+
+-   Implementação do sistema de **notificação por abandono de carrinho**:
+
+    -   Criação de job para envio de email após inatividade
+    -   Template institucional com dados da última tentativa de compra
+    -   Testes manuais com MailHog e validação de lógica de expiração
+
+-   Validação de **quantidade no carrinho limitada ao stock disponível**:
+
+    -   Campo `max` aplicado ao input de quantidade
+    -   Aviso visual quando o limite é atingido
+    -   Proteção contra tentativa de ultrapassar stock via formulário
+
+-   Confirmação da lógica que **impede adicionar livros esgotados ao carrinho**:
+
+    -   Botão ocultado na listagem de livros quando `stock_venda === 0`
+    -   Validação no controller para impedir adição forçada
+
+-   Criação de rotas e métodos para **gestão de encomendas no admin**:
+
+    -   Métodos `pendentes()` e `pagas()` no `EncomendaController`
+    -   Rotas `admin.encomendas.pendentes` e `admin.encomendas.pagas`
+    -   View com título dinâmico e botão “Voltar ao Dashboard”
+
+-   Criação da secção de **gestão de stock crítico**:
+
+    -   Controller `LivroStockController@index`
+    -   Rota `admin.livros.stock` definida
+    -   View com listagem de livros com `stock_venda <= 5`, ordenados por escassez
+
+-   Melhorias na **interface administrativa**:
+
+    -   Botões de navegação adicionados em carrinho, encomendas e stock
+    -   Layouts ajustados para consistência visual e semântica
+    -   Proteção contra dados nulos (ex: encomendas sem utilizador ou livros)
+
+-   Testes manuais realizados:
+
+    -   Simulação de abandono de carrinho e envio de email
+    -   Validação de limites de stock no carrinho
+    -   Navegação entre views admin e confirmação de rotas
+    -   Fluxo completo de encomenda paga vs pendente
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

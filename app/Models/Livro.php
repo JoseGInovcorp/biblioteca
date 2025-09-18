@@ -7,10 +7,25 @@ use Illuminate\Support\Str;
 
 class Livro extends Model
 {
-    protected $fillable = ['isbn', 'nome', 'editora_id', 'descricao', 'imagem_capa', 'preco'];
+    protected $fillable = [
+        'isbn',
+        'nome',
+        'editora_id',
+        'descricao',
+        'imagem_capa',
+        'preco', // legado, se ainda usares
+        'stock_venda',
+        'preco_venda',
+        'preco_requisicao',
+        'disponivel_para_requisicao',
+        'keywords',
+    ];
 
     protected $casts = [
         'keywords' => 'array',
+        'preco_venda' => 'decimal:2',
+        'preco_requisicao' => 'decimal:2',
+        'disponivel_para_requisicao' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -20,6 +35,28 @@ class Livro extends Model
                 $livro->keywords = self::extractKeywordsFromDescricao($livro->descricao);
             }
         });
+    }
+
+    // Helpers de disponibilidade
+    public function isDisponivelParaCompra(): bool
+    {
+        return ($this->stock_venda ?? 0) > 0;
+    }
+
+    public function isDisponivelParaRequisicao(): bool
+    {
+        return (bool) $this->disponivel_para_requisicao === true;
+    }
+
+    // Scopes
+    public function scopeDisponiveisParaCompra($query)
+    {
+        return $query->where('stock_venda', '>', 0);
+    }
+
+    public function scopeDisponiveisParaRequisicao($query)
+    {
+        return $query->where('disponivel_para_requisicao', true);
     }
 
     /**
@@ -74,7 +111,6 @@ class Livro extends Model
             'quando',
             'onde',
             'quanto',
-
             // Pronomes e determinantes
             'eu',
             'tu',
@@ -119,7 +155,6 @@ class Livro extends Model
             'todas',
             'cada',
             'qualquer',
-
             // Verbos auxiliares e genéricos
             'ser',
             'estar',
@@ -153,7 +188,6 @@ class Livro extends Model
             'estavam',
             'estive',
             'tinha',
-
             // Termos genéricos de baixo valor semântico
             'vida',
             'história',
@@ -166,7 +200,7 @@ class Livro extends Model
             'noite',
             'casa',
             'pessoa',
-            'gente'
+            'gente',
         ];
     }
 
@@ -187,7 +221,7 @@ class Livro extends Model
             ->value();
 
         $tokens = array_filter(explode(' ', $texto), function ($t) {
-            return $t !== '' && !preg_match('/\d/', $t) && mb_strlen($t) >= 4;
+            return $t !== '' && !preg_match('/\d/', $t) && strlen($t) >= 4;
         });
 
         $stops = array_flip(static::stopwordsPt());
@@ -213,34 +247,34 @@ class Livro extends Model
      */
     public function relacionados(int $limit = 5)
     {
-        $myKeywords = $this->keywords ?? [];
+        $myKeywords = is_array($this->keywords) ? $this->keywords : [];
         $autorIds   = $this->autores->pluck('id')->all();
         $generoIds  = $this->generos->pluck('id')->all();
 
-        // Base de candidatos: todos os outros livros com keywords
-        $candidatos = self::query()
+        $query = self::query()
             ->where('id', '!=', $this->id)
             ->whereNotNull('keywords')
-            ->with(['editora', 'autores', 'generos'])
-            ->get();
+            ->with(['editora', 'autores', 'generos']);
 
-        // Grupo: mesmo autor
+        if (!empty($generoIds)) {
+            $query->whereHas('generos', fn($q) => $q->whereIn('generos.id', $generoIds));
+        }
+
+        $candidatos = $query->limit(200)->get();
+
         $mesmoAutor = $candidatos->filter(function ($livro) use ($autorIds) {
             return $livro->autores->pluck('id')->intersect($autorIds)->isNotEmpty();
         });
 
-        // Grupo: semelhantes no tema
         $mesmoTema = $candidatos
             ->reject(function ($livro) use ($autorIds) {
-                // exclui os do mesmo autor
                 return $livro->autores->pluck('id')->intersect($autorIds)->isNotEmpty();
             })
             ->filter(function ($livro) use ($myKeywords, $generoIds) {
-                $overlap = count(array_intersect($myKeywords, $livro->keywords ?? []));
+                $k2 = is_array($livro->keywords) ? $livro->keywords : [];
+                $overlap = count(array_intersect($myKeywords, $k2));
                 $temGeneroEmComum = !empty($generoIds) &&
                     $livro->generos->pluck('id')->intersect($generoIds)->isNotEmpty();
-
-                // Critério: ou partilha género, ou tem keywords suficientes em comum
                 return $temGeneroEmComum || $overlap >= 3;
             });
 
@@ -251,7 +285,7 @@ class Livro extends Model
             ->values();
     }
 
-
+    // Relações
     public function autores()
     {
         return $this->belongsToMany(Autor::class, 'autor_livro', 'livro_id', 'autor_id');

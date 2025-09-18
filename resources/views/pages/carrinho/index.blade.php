@@ -14,6 +14,7 @@
             <thead>
                 <tr>
                     <th>Livro</th>
+                    <th>Tipo</th>
                     <th>Quantidade</th>
                     <th>Preço Unitário</th>
                     <th>Total</th>
@@ -24,16 +25,28 @@
                 @foreach($itens as $item)
                     <tr>
                         <td>{{ $item->livro->nome }}</td>
+                        <td>{{ ucfirst($item->tipo_encomenda) }}</td>
                         <td>
                             <form method="POST" action="{{ route('carrinho.update', $item->livro) }}" class="flex items-center gap-2">
                                 @csrf
                                 @method('PATCH')
-                                <input type="number" name="quantity" value="{{ $item->quantity }}" min="1" class="input input-bordered w-16">
+                                <input type="number"
+                                    name="quantity"
+                                    value="{{ $item->quantity }}"
+                                    min="1"
+                                    max="{{ $item->livro->stock_venda }}"
+                                    class="input input-bordered w-16" />
+
+                                @if($item->livro->stock_venda <= $item->quantity)
+                                    <p class="text-xs text-warning mt-1">
+                                        ⚠️ Apenas {{ $item->livro->stock_venda }} unidade{{ $item->livro->stock_venda > 1 ? 's' : '' }} disponível.
+                                    </p>
+                                @endif
                                 <button type="submit" class="btn btn-sm btn-primary">🔄 Atualizar</button>
                             </form>
                         </td>
-                        <td>€{{ number_format($item->livro->preco, 2, ',', '.') }}</td>
-                        <td>€{{ number_format($item->quantity * $item->livro->preco, 2, ',', '.') }}</td>
+                        <td>€{{ number_format($item->preco_unitario, 2, ',', '.') }}</td>
+                        <td>€{{ number_format($item->quantity * $item->preco_unitario, 2, ',', '.') }}</td>
                         <td>
                             <form method="POST" action="{{ route('carrinho.remove', $item->livro) }}">
                                 @csrf

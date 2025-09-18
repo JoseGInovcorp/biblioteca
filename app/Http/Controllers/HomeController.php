@@ -17,11 +17,12 @@ class HomeController extends Controller
 
         if (auth()->check() && auth()->user()->isAdmin()) {
             $dados = [
-                'totalLivros'         => Livro::count(),
-                'totalUsers'          => User::count(),
-                'reviewsPendentes'    => Review::where('estado', 'suspenso')->count(),
-                'requisicoesAtivas'   => Requisicao::where('status', 'ativa')->count(),
-                'encomendasPendentes' => Encomenda::where('estado', 'pendente')->count(),
+                'totalLivros'           => Livro::count(),
+                'totalUsers'            => User::count(),
+                'reviewsPendentes'      => Review::where('estado', 'suspenso')->count(),
+                'requisicoesAtivas'     => Requisicao::where('status', 'ativa')->count(),
+                'encomendasPendentes'   => Encomenda::where('estado', 'pendente')->count(),
+                'livrosComStockCritico' => Livro::where('stock_venda', '<=', 2)->count(),
             ];
         }
 

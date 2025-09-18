@@ -6,7 +6,7 @@
         <h1 class="text-3xl font-bold text-primary text-center">📚 Bem-vindo à Biblioteca</h1>
 
         @if(auth()->user()->isAdmin())
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6 mb-8">
                 <div class="stat bg-base-200 p-4 rounded shadow">
                     <div class="stat-title text-sm text-gray-500">📚 Livros</div>
                     <div class="stat-value text-xl font-bold">{{ $totalLivros }}</div>
@@ -23,8 +23,13 @@
                     <div class="stat-title text-sm text-gray-500">📦 Requisições Ativas</div>
                     <div class="stat-value text-xl font-bold">{{ $requisicoesAtivas }}</div>
                 </div>
+                <div class="stat bg-base-200 p-4 rounded shadow">
+                    <div class="stat-title text-sm text-gray-500">📉 Livros com Stock Crítico</div>
+                    <div class="stat-value text-xl font-bold text-warning">{{ $livrosComStockCritico }}</div>
+                </div>
             </div>
         @endif
+
         <p class="mt-4 text-base-content text-center">Escolhe uma opção abaixo:</p>
 
         {{-- Secção comum a todos os utilizadores --}}
@@ -68,13 +73,17 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {{-- Gestão de Encomendas --}}
                 <div class="card bg-base-200 shadow relative">
                     <div class="card-body">
                         <h2 class="card-title">📦 Encomendas</h2>
                         <p class="text-sm text-gray-600">Consultar todas as encomendas efetuadas pelos cidadãos.</p>
-                        <a href="{{ route('admin.encomendas.index') }}" class="btn btn-outline mt-3">📦 Ver Encomendas</a>
+                        <div class="flex flex-col gap-2 mt-3">
+                            <a href="{{ route('admin.encomendas.index') }}" class="btn btn-outline">📦 Todas as Encomendas</a>
+                            <a href="{{ route('admin.encomendas.pendentes') }}" class="btn btn-warning">⏳ Pendentes</a>
+                            <a href="{{ route('admin.encomendas.pagas') }}" class="btn btn-success">✅ Pagas</a>
+                        </div>
                     </div>
 
                     @if($encomendasPendentes > 0)
@@ -82,6 +91,15 @@
                             {{ $encomendasPendentes }} pendente{{ $encomendasPendentes > 1 ? 's' : '' }}
                         </div>
                     @endif
+                </div>
+
+                {{-- Gestão de Stock --}}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <h2 class="card-title">📉 Gestão de Stock</h2>
+                        <p class="text-sm text-gray-600">Verificar livros com stock baixo ou esgotado.</p>
+                        <a href="{{ route('admin.livros.stock') }}" class="btn btn-outline mt-3">📊 Ver Stock</a>
+                    </div>
                 </div>
             </div>
         @endif

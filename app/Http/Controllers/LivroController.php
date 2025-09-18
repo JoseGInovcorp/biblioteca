@@ -127,6 +127,8 @@ class LivroController extends Controller
             'preco'        => 'required|numeric',
             'imagem_capa'  => 'nullable',
             'autores'      => 'array',
+            'stock_venda' => 'required|integer|min:0',
+            'preco_venda' => 'required|numeric|min:0',
             // Removida a regra exists para permitir autores dinâmicos
         ]);
 
@@ -234,6 +236,23 @@ class LivroController extends Controller
             abort(403, 'Acesso negado.');
         }
 
+        // Fluxo 1: atualização parcial (inline) — apenas preço(s) e stock
+        if ($request->boolean('inline')) {
+            // validação mínima para o inline
+            $validated = $request->validate([
+                'preco'        => 'required|numeric|min:0',
+                'preco_venda'  => 'required|numeric|min:0',
+                'stock_venda'  => 'required|integer|min:0',
+            ]);
+
+            $livro->update($validated);
+
+            return redirect()
+                ->route('livros.index', ['page' => $request->input('page', 1)])
+                ->with('success', 'Preço e stock atualizados com sucesso.');
+        }
+
+        // Fluxo 2: atualização completa (edit.blade)
         // Se vier nova_editora, cria ou obtém e substitui a atual
         if ($request->filled('nova_editora')) {
             $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
@@ -254,19 +273,21 @@ class LivroController extends Controller
             $request->merge(['generos' => $generosIds]);
         }
 
-        // Validação
+        // Validação completa
         $validated = $request->validate([
             'nome'         => 'required|string|max:255',
             'isbn'         => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
             'editora_id'   => 'required_without:nova_editora|exists:editoras,id',
             'nova_editora' => 'required_without:editora_id|string|nullable',
             'descricao'    => 'nullable|string',
-            'preco'        => 'required|numeric',
+            'preco'        => 'required|numeric|min:0',
             'imagem_capa'  => 'nullable',
             'autores'      => 'array',
             'autores.*'    => 'exists:autores,id',
             'generos'      => 'array',
             'generos.*'    => 'exists:generos,id',
+            'stock_venda'  => 'required|integer|min:0',
+            'preco_venda'  => 'required|numeric|min:0',
         ]);
 
         // 📷 Capa: upload manual OU URL (substitui a anterior)
@@ -304,7 +325,7 @@ class LivroController extends Controller
             $livro->autores()->sync($validated['autores']);
         }
 
-        // Atualiza géneros (muitos-para-muitos)
+        // Atualiza géneros
         if (!empty($validated['generos'])) {
             $livro->generos()->sync($validated['generos']);
         }
@@ -327,7 +348,8 @@ class LivroController extends Controller
             }
         }
 
-        return redirect()->route('livros.index', ['page' => $request->input('page', 1)])
+        return redirect()
+            ->route('livros.index', ['page' => $request->input('page', 1)])
             ->with('success', 'Livro atualizado com sucesso.');
     }
 

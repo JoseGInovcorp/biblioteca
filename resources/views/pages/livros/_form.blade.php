@@ -95,6 +95,19 @@
     <label class="label">Preço (€)</label>
     <input type="number" step="0.01" name="preco" value="{{ old('preco', $livro->preco ?? '') }}" class="input input-bordered w-full" required>
 </div>
+<div>
+    <label class="label">Preço de venda (€)</label>
+    <input type="number" step="0.01" name="preco_venda"
+           value="{{ old('preco_venda', $livro->preco_venda ?? '') }}"
+           class="input input-bordered w-full" required>
+</div>
+
+<div>
+    <label class="label">Stock para venda</label>
+    <input type="number" name="stock_venda"
+           value="{{ old('stock_venda', $livro->stock_venda ?? 0) }}"
+           class="input input-bordered w-full" min="0" required>
+</div>
 
 <div>
     <label class="label">Imagem da Capa</label>

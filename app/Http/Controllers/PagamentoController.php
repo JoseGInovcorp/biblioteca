@@ -7,6 +7,8 @@ use Stripe\Stripe;
 use Stripe\Checkout\Session as StripeSession;
 use App\Models\CartItem;
 use App\Models\Encomenda;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PagamentoController extends Controller
 {
@@ -36,6 +38,18 @@ class PagamentoController extends Controller
             return redirect()->route('carrinho.index')->with('error', 'O carrinho está vazio.');
         }
 
+        // Verificar stock antes de criar sessão Stripe
+        foreach ($itens as $item) {
+            if ($item->tipo_encomenda === 'compra') {
+                if ($item->livro->stock_venda < $item->quantity) {
+                    return redirect()->route('carrinho.index')->with(
+                        'error',
+                        "O livro '{$item->livro->nome}' tem apenas {$item->livro->stock_venda} unidades disponíveis. Reduza a quantidade antes de continuar."
+                    );
+                }
+            }
+        }
+
         $lineItems = [];
         foreach ($itens as $item) {
             $lineItems[] = [
@@ -44,7 +58,7 @@ class PagamentoController extends Controller
                     'product_data' => [
                         'name' => $item->livro->nome,
                     ],
-                    'unit_amount' => intval($item->livro->preco * 100),
+                    'unit_amount' => intval($item->preco_unitario * 100),
                 ],
                 'quantity' => $item->quantity,
             ];
@@ -89,21 +103,32 @@ class PagamentoController extends Controller
                 ->with('error', 'Por favor defina a morada de entrega antes de concluir o pagamento.');
         }
 
-        $subtotal = $itens->sum(fn($i) => $i->quantity * $i->livro->preco);
+        $subtotal = $itens->sum(fn($i) => $i->quantity * $i->preco_unitario);
 
-        $encomenda = Encomenda::create([
-            'user_id' => $user->id,
-            'morada'  => $morada,
-            'total'   => $subtotal,
-            'estado'  => 'paga',
-        ]);
-
-        foreach ($itens as $item) {
-            $encomenda->livros()->attach($item->livro_id, [
-                'quantidade'     => $item->quantity,
-                'preco_unitario' => $item->livro->preco,
+        DB::transaction(function () use ($user, $morada, $subtotal, $itens) {
+            $encomenda = Encomenda::create([
+                'user_id' => $user->id,
+                'morada'  => $morada,
+                'total'   => $subtotal,
+                'estado'  => 'paga',
             ]);
-        }
+
+            foreach ($itens as $item) {
+                $encomenda->livros()->attach($item->livro_id, [
+                    'quantidade'     => $item->quantity,
+                    'preco_unitario' => $item->preco_unitario,
+                ]);
+
+                // Atualizar stock com proteção
+                $item->livro->stock_venda = max(0, $item->livro->stock_venda - $item->quantity);
+                $item->livro->save();
+
+                // Log se esgotar
+                if ($item->livro->stock_venda === 0) {
+                    Log::warning("📉 Livro esgotado: {$item->livro->nome} (ID {$item->livro->id})");
+                }
+            }
+        });
 
         // Limpar carrinho e sessão
         CartItem::where('user_id', $user->id)->delete();

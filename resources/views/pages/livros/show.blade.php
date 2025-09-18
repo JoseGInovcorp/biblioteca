@@ -5,7 +5,6 @@
 
 <a href="{{ request()->query('from', route('livros.index')) }}" class="btn btn-outline btn-secondary mb-4">⬅️ Voltar</a>
 
-
 @php
     $disponivel = !$livro->requisicoes()->where('status', 'ativa')->exists();
 @endphp
@@ -36,54 +35,76 @@
                 {{ $autor->nome }}@if(!$loop->last), @endif
             @endforeach
         </p>
-        <p><strong>Preço:</strong> €{{ number_format($livro->preco, 2, ',', '.') }}</p>
-
-        <p class="mt-2"><strong>Disponibilidade:</strong>
-            @if($disponivel)
-                <span class="badge badge-success">✅ Disponível</span>
-            @else
-                <span class="badge badge-error">❌ Indisponível</span>
-            @endif
-        </p>
 
         @auth
             @if(auth()->user()->isCidadao())
-                {{-- Botão para adicionar ao carrinho --}}
-                <form method="POST" action="{{ route('carrinho.add', $livro) }}" class="mt-2">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">🛒 Adicionar ao Carrinho</button>
-                </form>
+                {{-- Secção de Compra --}}
+                <div class="mt-4 p-4 border rounded bg-gray-50">
+                    <h3 class="font-bold mb-2">🛒 Comprar este livro</h3>
+                    <p><strong>Preço:</strong> {{ number_format($livro->preco_venda, 2, ',', '.') }} €</p>
+                    <p><strong>Stock:</strong> {{ $livro->stock_venda > 0 ? $livro->stock_venda : 'Esgotado' }}</p>
 
-                {{-- Botão de requisição (mantém a tua lógica atual) --}}
-                @if($disponivel)
-                    <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}" class="btn btn-success mt-2">📦 Requisitar</a>
-                @else
-                    <button class="btn btn-disabled mt-2" disabled>📦 Indisponível</button>
-
-                    @php
-                        $alerta = $livro->alertas()->where('user_id', auth()->id())->latest()->first();
-                        $mostrarBotaoAlerta = !$alerta || $alerta->notificado_em !== null;
-
-                        $requisitadoPorMim = $livro->requisicoes()
-                            ->where('status', 'ativa')
-                            ->where('cidadao_id', auth()->id())
-                            ->exists();
-                    @endphp
-
-                    @if($requisitadoPorMim)
-                        <p class="text-sm text-green-600 mt-2">Este livro está atualmente na sua posse.</p>
-                    @elseif($mostrarBotaoAlerta)
-                        <form method="POST" action="{{ route('alertas.store', $livro) }}" class="mt-2">
+                    @if($livro->isDisponivelParaCompra())
+                        <form method="POST" action="{{ route('carrinho.add', $livro) }}">
                             @csrf
-                            <button class="btn btn-warning">🔔 Avisar-me quando disponível</button>
+                            <input type="hidden" name="tipo_encomenda" value="compra">
+                            <button type="submit" class="btn btn-primary mt-2">Adicionar ao Carrinho</button>
                         </form>
                     @else
-                        <p class="text-sm text-yellow-600 mt-2">Já será notificado quando este livro estiver disponível.</p>
+                        <button class="btn btn-disabled mt-2" disabled>Esgotado</button>
                     @endif
-                @endif
+                </div>
+
+                {{-- Secção de Requisição --}}
+                <div class="mt-6 p-4 border rounded bg-gray-50">
+                    <h3 class="font-bold mb-2">📦 Requisitar este livro</h3>
+                    <p><strong>Custo de requisição:</strong> {{ number_format($livro->preco, 2, ',', '.') }} €</p>
+
+                    @if($disponivel)
+                        <a href="{{ route('requisicoes.create', ['livro_id' => $livro->id]) }}" class="btn btn-success mt-2">Requisitar Agora</a>
+                    @else
+                        <button class="btn btn-disabled mt-2" disabled>Indisponível</button>
+
+                        @php
+                            $alerta = $livro->alertas()->where('user_id', auth()->id())->latest()->first();
+                            $mostrarBotaoAlerta = !$alerta || $alerta->notificado_em !== null;
+                            $requisitadoPorMim = $livro->requisicoes()
+                                ->where('status', 'ativa')
+                                ->where('cidadao_id', auth()->id())
+                                ->exists();
+                        @endphp
+
+                        @if($requisitadoPorMim)
+                            <p class="text-sm text-green-600 mt-2">Este livro está atualmente na sua posse.</p>
+                        @elseif($mostrarBotaoAlerta)
+                            <form method="POST" action="{{ route('alertas.store', $livro) }}" class="mt-2">
+                                @csrf
+                                <button class="btn btn-warning">🔔 Avisar-me quando disponível</button>
+                            </form>
+                        @else
+                            <p class="text-sm text-yellow-600 mt-2">Já será notificado quando este livro estiver disponível.</p>
+                        @endif
+                    @endif
+                </div>
+            @elseif(auth()->user()->isAdmin())
+                {{-- Painel informativo para Admin --}}
+                <div class="mt-4 p-4 border rounded bg-gray-50">
+                    <h3 class="font-bold mb-2">📊 Estado do Livro</h3>
+                    <p><strong>Preço de venda:</strong> €{{ number_format($livro->preco_venda, 2, ',', '.') }}</p>
+                    <p><strong>Stock para venda:</strong> {{ $livro->stock_venda }}</p>
+                    <p><strong>Preço de requisição:</strong> €{{ number_format($livro->preco, 2, ',', '.') }}</p>
+                    <p><strong>Disponível para requisição:</strong>
+                        @if($disponivel)
+                            <span class="badge badge-success">✅ Sim</span>
+                        @else
+                            <span class="badge badge-error">❌ Não</span>
+                        @endif
+                    </p>
+                </div>
             @endif
         @endauth
 
+        {{-- Descrição --}}
         @if(!empty($livro->descricao))
             <div class="mt-6">
                 <h3 class="text-lg font-semibold">Descrição</h3>
@@ -93,6 +114,7 @@
             </div>
         @endif
 
+        {{-- Opiniões --}}
         <div class="mt-6">
             <h3 class="text-lg font-semibold">Opiniões dos leitores</h3>
             @if($livro->reviews->count())
