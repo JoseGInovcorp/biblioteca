@@ -767,6 +767,42 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 25 — 🛒 Histórico de Encomendas, Dashboard do Cidadão e Finalização da Entrega
+
+-   Criação da página de **histórico de encomendas do cidadão**:
+
+    -   Controller `EncomendaCidadaoController@index` fora da pasta `Admin`
+    -   View `pages/encomendas/cidadao.blade.php` com layout consistente
+    -   Listagem de encomendas do utilizador autenticado com estado, data e livros
+
+-   Definição da **rota protegida** para cidadãos:
+
+    -   Rota `encomendas.cidadao` acessível apenas a utilizadores autenticados
+    -   Garantia de que o admin não vê esta secção no seu dashboard
+
+-   Adição de botão de **retorno à página inicial** na view de encomendas:
+
+    -   Botão “← Voltar à Página Inicial” com rota `home`
+    -   Mantida a navegação reversível em todas as views
+
+-   Reorganização da **interface do dashboard do cidadão**:
+
+    -   Substituição de botões simples por cartões informativos
+    -   Títulos, descrições e ações agrupadas por tema
+    -   Separação clara entre funcionalidades do cidadão e do admin
+
+-   Proteção contra **visualização duplicada por admins**:
+
+    -   Condicional `@if(!auth()->user()->isAdmin())` aplicada à secção do cidadão
+    -   Garantia de que o dashboard mostra apenas o que é relevante para cada perfil
+
+-   Finalização da **gravação do vídeo de apresentação**:
+
+    -   Demonstração do fluxo completo de compra, pagamento e gestão
+    -   Validação visual e funcional de todas as melhorias da semana
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).
@@ -802,5 +838,9 @@ O vídeo de demonstração do projeto pode ser visto aqui para cada semana:
 ---
 
 [📺 Ver vídeo relativo à quarta semana no Google Drive](https://drive.google.com/file/d/196tbGmfITc1uApwN98wZK1ixxaDuTI19/view?usp=sharing)
+
+---
+
+[📺 Ver vídeo relativo à quinta semana no Google Drive](https://drive.google.com/file/d/1I6tIq8x9TfsNoNoB1sVWX6n4lupCERh0/view?usp=sharing)
 
 Desenvolvido por José G. durante estágio na InovCorp.

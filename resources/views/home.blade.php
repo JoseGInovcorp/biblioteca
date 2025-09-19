@@ -30,15 +30,50 @@
             </div>
         @endif
 
-        <p class="mt-4 text-base-content text-center">Escolhe uma opção abaixo:</p>
+        @if(!auth()->user()->isAdmin())
+            <h2 class="text-xl font-semibold text-center mt-10 mb-4">🎯 Ações Disponíveis</h2>
 
-        {{-- Secção comum a todos os utilizadores --}}
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <a href="{{ route('livros.index') }}" class="btn btn-primary">📘 Livros</a>
-            <a href="{{ route('autores.index') }}" class="btn btn-secondary">👤 Autores</a>
-            <a href="{{ route('editoras.index') }}" class="btn btn-accent">🏢 Editoras</a>
-            <a href="{{ route('requisicoes.index') }}" class="btn btn-neutral">📦 Requisições</a>
-        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                {{-- Livros --}}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <h3 class="card-title">📘 Livros</h3>
+                        <p class="text-sm text-gray-600">Consulta o catálogo completo da biblioteca.</p>
+                        <a href="{{ route('livros.index') }}" class="btn btn-primary mt-3">Ver Livros</a>
+                    </div>
+                </div>
+
+                {{-- Autores & Editoras --}}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <h3 class="card-title">👤 Autores & 🏢 Editoras</h3>
+                        <p class="text-sm text-gray-600">Explora os autores e editoras disponíveis.</p>
+                        <div class="flex flex-col gap-2 mt-3">
+                            <a href="{{ route('autores.index') }}" class="btn btn-secondary">Autores</a>
+                            <a href="{{ route('editoras.index') }}" class="btn btn-accent">Editoras</a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Requisições --}}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <h3 class="card-title">📦 Requisições</h3>
+                        <p class="text-sm text-gray-600">Consulta os livros que requisitaste.</p>
+                        <a href="{{ route('requisicoes.index') }}" class="btn btn-neutral mt-3">Ver Requisições</a>
+                    </div>
+                </div>
+
+                {{-- Encomendas --}}
+                <div class="card bg-base-200 shadow">
+                    <div class="card-body">
+                        <h3 class="card-title">🛒 Encomendas</h3>
+                        <p class="text-sm text-gray-600">Consulta o histórico das tuas encomendas.</p>
+                        <a href="{{ route('encomendas.cidadao') }}" class="btn btn-outline btn-primary mt-3">Ver Encomendas</a>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- Secção exclusiva para Admins --}}
         @if(auth()->user()->isAdmin())
