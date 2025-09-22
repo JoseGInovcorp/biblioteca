@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+
+    {{-- Alpine.js para efeitos de dropdown/slide --}}
+    <script src="//unpkg.com/alpinejs" defer></script>
 </head>
 <body class="bg-base-100 text-base-content min-h-screen flex flex-col">
 

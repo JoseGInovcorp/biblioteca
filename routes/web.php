@@ -61,6 +61,10 @@ Route::middleware([
     Route::resource('requisicoes', RequisicaoController::class)
         ->parameters(['requisicoes' => 'requisicao']);
 
+    // ➕ Rota extra para devolução de livros
+    Route::patch('/requisicoes/{requisicao}/devolver', [RequisicaoController::class, 'devolver'])
+        ->name('requisicoes.devolver');
+
     /** 📤 Exportação de livros para Excel */
     Route::get('/exportar-livros', function () {
         if (!auth()->user()->isAdmin()) {
@@ -75,7 +79,8 @@ Route::middleware([
     })->name('dashboard');
 
     /** 👥 Utilizadores */
-    Route::resource('users', UserController::class)->only(['index', 'show', 'create', 'store']);
+    Route::resource('users', UserController::class)
+        ->only(['index', 'show', 'create', 'store', 'destroy']);
 
     /** 📚 Integração Google Books API */
     Route::middleware('can:isAdmin')->group(function () {
@@ -137,4 +142,15 @@ Route::middleware([
 
     // 📉 Gestão de stock de livros (Admin)
     Route::get('/admin/livros/stock', [LivroStockController::class, 'index'])->name('admin.livros.stock');
+    Route::put('/admin/livros/stock/{livro}', [LivroStockController::class, 'update'])
+        ->name('admin.livros.stock.update')
+        ->middleware('can:isAdmin');
+    Route::get('/admin/livros/stock/todos', [LivroStockController::class, 'todos'])
+        ->name('admin.livros.stock.todos')
+        ->middleware('can:isAdmin');
+
+    // 📜 Logs (Admin)
+    Route::get('/admin/logs', [\App\Http\Controllers\Admin\LogController::class, 'index'])
+        ->middleware(['auth', 'verified', 'can:isAdmin'])
+        ->name('admin.logs.index');
 });

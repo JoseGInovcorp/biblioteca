@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto mt-10">
-    <h2 class="text-2xl font-bold mb-6 text-warning">📉 Livros com Stock Baixo</h2>
+    <h2 class="text-2xl font-bold mb-6 text-warning">📦 Gestão de Stock — Todos os Livros</h2>
 
     <a href="{{ route('home') }}" 
     class="btn btn-outline btn-primary mb-4">

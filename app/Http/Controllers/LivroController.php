@@ -7,6 +7,7 @@ use App\Models\Editora;
 use App\Models\Autor;
 use App\Models\Genero;
 use App\Mail\LivroDisponivelMail;
+use App\Traits\RegistaLog;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Log;
 
 class LivroController extends Controller
 {
+    use RegistaLog;
+
     public function index(Request $request)
     {
         $query = Livro::with('editora', 'autores');
@@ -123,13 +126,12 @@ class LivroController extends Controller
             'nome'         => 'required|string|max:255',
             'isbn'         => 'required|string|max:255',
             'editora_id'   => 'required|exists:editoras,id',
-            'descricao' => 'nullable|string',
+            'descricao'    => 'nullable|string',
             'preco'        => 'required|numeric',
             'imagem_capa'  => 'nullable',
             'autores'      => 'array',
-            'stock_venda' => 'required|integer|min:0',
-            'preco_venda' => 'required|numeric|min:0',
-            // Removida a regra exists para permitir autores dinâmicos
+            'stock_venda'  => 'required|integer|min:0',
+            'preco_venda'  => 'required|numeric|min:0',
         ]);
 
         // 📷 Capa: upload manual OU URL da API
@@ -181,6 +183,9 @@ class LivroController extends Controller
         }
 
         $livro->autores()->sync($autoresIds);
+
+        // 📜 Registar log da criação
+        $this->registarLog('Livros', $livro->id, 'Criou um novo livro');
 
         return redirect()->route('livros.index')->with('success', 'Livro criado com sucesso!');
     }
@@ -247,25 +252,25 @@ class LivroController extends Controller
 
             $livro->update($validated);
 
+            // 📜 Registar log da atualização inline
+            $this->registarLog('Livros', $livro->id, 'Atualizou preço/stock (edição inline)');
+
             return redirect()
                 ->route('livros.index', ['page' => $request->input('page', 1)])
                 ->with('success', 'Preço e stock atualizados com sucesso.');
         }
 
         // Fluxo 2: atualização completa (edit.blade)
-        // Se vier nova_editora, cria ou obtém e substitui a atual
         if ($request->filled('nova_editora')) {
             $editora = Editora::firstOrCreate(['nome' => $request->nova_editora]);
             $request->merge(['editora_id' => $editora->id]);
         }
 
-        // Se vier editora_nome da API, também cria/associa
         if ($request->filled('editora_nome')) {
             $editora = Editora::firstOrCreate(['nome' => $request->editora_nome]);
             $request->merge(['editora_id' => $editora->id]);
         }
 
-        // Se vier novo_genero, cria e adiciona à lista
         if ($request->filled('novo_genero')) {
             $novoGenero = Genero::firstOrCreate(['nome' => $request->novo_genero]);
             $generosIds = $request->input('generos', []);
@@ -273,7 +278,6 @@ class LivroController extends Controller
             $request->merge(['generos' => $generosIds]);
         }
 
-        // Validação completa
         $validated = $request->validate([
             'nome'         => 'required|string|max:255',
             'isbn'         => 'required|string|max:255|unique:livros,isbn,' . $livro->id,
@@ -290,7 +294,6 @@ class LivroController extends Controller
             'preco_venda'  => 'required|numeric|min:0',
         ]);
 
-        // 📷 Capa: upload manual OU URL (substitui a anterior)
         $caminhoCapa = null;
 
         if ($request->hasFile('imagem_capa')) {
@@ -317,23 +320,18 @@ class LivroController extends Controller
             $validated['imagem_capa'] = $caminhoCapa;
         }
 
-        // Atualiza dados do livro
         $livro->update($validated);
 
-        // Atualiza autores
         if (!empty($validated['autores'])) {
             $livro->autores()->sync($validated['autores']);
         }
 
-        // Atualiza géneros
         if (!empty($validated['generos'])) {
             $livro->generos()->sync($validated['generos']);
         }
 
-        // Verifica se o livro está disponível (sem requisições ativas)
         $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
 
-        // Dispara alertas se houver alertas pendentes e o livro estiver disponível
         if ($ficouDisponivel) {
             Log::info("📡 Verificação de alertas iniciada para livro {$livro->id}");
 
@@ -347,6 +345,9 @@ class LivroController extends Controller
                 }
             }
         }
+
+        // 📜 Registar log da atualização completa
+        $this->registarLog('Livros', $livro->id, 'Atualizou informações do livro');
 
         return redirect()
             ->route('livros.index', ['page' => $request->input('page', 1)])
@@ -365,6 +366,11 @@ class LivroController extends Controller
 
         $livro->delete();
 
-        return redirect()->route('livros.index')->with('success', 'Livro apagado com sucesso!');
+        // 📜 Registar log da eliminação
+        $this->registarLog('Livros', $livro->id, 'Apagou o livro');
+
+        return redirect()
+            ->route('livros.index')
+            ->with('success', 'Livro apagado com sucesso!');
     }
 }

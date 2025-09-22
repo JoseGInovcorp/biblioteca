@@ -60,7 +60,7 @@
             <th>Início</th>
             <th>Fim Previsto</th>
             <th>Status</th>
-            <th>Ação</th> {{-- nova coluna visível para todos --}}
+            <th>Ação</th>
         </tr>
     </thead>
     <tbody>
@@ -87,14 +87,21 @@
                     $req->cidadao_id === auth()->id()
                 )
                     <a href="{{ route('requisicoes.show', $req) }}?review=1" class="btn btn-sm btn-primary">
-    📝 Deixar Review
-</a>
-
+                        📝 Deixar Review
+                    </a>
                 @endif
 
                 {{-- Ações de admin --}}
                 @if(auth()->user()->isAdmin())
                     @if($req->status === 'ativa')
+                        {{-- Botão para devolver diretamente --}}
+                        <form action="{{ route('requisicoes.devolver', $req) }}" method="POST" onsubmit="return confirm('Confirmar devolução deste livro?')" style="display:inline;">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-sm btn-success">✅ Devolver</button>
+                        </form>
+
+                        {{-- Botão antigo de receber livro (opcional manter) --}}
                         <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
                     @endif
                     

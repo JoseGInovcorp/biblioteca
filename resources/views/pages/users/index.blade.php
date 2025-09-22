@@ -27,6 +27,14 @@
             <td>{{ ucfirst($user->role) }}</td>
             <td class="flex gap-2">
                 <a href="{{ route('users.show', $user) }}" class="btn btn-sm btn-info">👁️ Ver</a>
+
+                @if(auth()->user()->isAdmin() && auth()->id() !== $user->id)
+                    <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Tem a certeza que quer apagar este utilizador?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-error">🗑️ Apagar</button>
+                    </form>
+                @endif
             </td>
         </tr>
         @endforeach

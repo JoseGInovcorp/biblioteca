@@ -803,6 +803,141 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
+### Dia 26 — TAREFA 1 - Consulta de Logs (Admin)
+
+-   **Migração** criada para a tabela `logs\_atividade` com campos: `id`, `user\_id`, `acao`, `descricao`, `created\_at`.
+
+-   **Modelo `Log`** criado com relação `belongsTo(User::class)`.
+
+-   **Controller `Admin\\LogController`**:
+      - Método `index()` com listagem paginada dos logs mais recentes.
+      - **Filtros adicionados**:
+      - Por **utilizador** (`user\_id`) — permite ver apenas ações de um utilizador específico.
+      - Por **módulo** (`modulo`) — permite filtrar ações por área funcional (ex.: `Livros`, `Requisições`, `Pagamentos`).
+      - Paginação preserva os filtros ativos (`withQueryString()`).
+
+-   **Rota protegida** `admin.logs.index` adicionada ao grupo de rotas admin.
+
+-   **View `admin/logs/index.blade.php`**:
+      - Formulário no topo com `<select>` para utilizador e módulo.
+      - Tabela com colunas: Data/Hora, Utilizador, Módulo, ID Objeto, Alteração, IP, Browser.
+      - Mensagem de “Nenhum registo encontrado” quando não há resultados.
+
+-   **Integração no dashboard**:
+      - Card “📜 Logs de Atividade” com link direto para a listagem.
+
+-   **Segurança**:
+      - Acesso restrito a utilizadores com perfil de administrador.
+
+# Processo de registo de logs
+
+-   Implementado via **trait `App\\Traits\\RegistaLog`**.
+-   Método principal:
+      (```php
+      $this->registarLog(string $modulo, ?int $objetoId, string $alteracao);)
+-   Preenche automaticamente:
+
+    -   user_id (utilizador autenticado)
+    -   ip (endereço IP)
+    -   browser (user agent)
+
+-   Modulo, objeto_id e alteracao são definidos no momento da chamada, garantindo consistência e clareza nos registos.
+-   Todos os controllers auditados usam este trait, assegurando que o campo modulo está sempre preenchido e pronto para ser usado nos filtros.
+
+# Dados recolhidos por log
+
+-   **user_id:** utilizador autenticado associado ao evento (ou nulo se aplicável).
+-   **modulo:** nome do módulo/área onde ocorreu a ação (ex.: `Livros`, `Requisições`, `Pagamentos`).
+-   **objeto_id:** identificador do objeto afetado (se aplicável).
+-   **alteracao:** descrição legível da ação realizada.
+-   **ip:** endereço IP do utilizador no momento da ação.
+-   **browser:** _user agent_ do navegador.
+-   **created_at:** timestamp do registo.
+
+# Pontos de integração (controllers/métodos)
+
+Registo de logs adicionado nos seguintes controladores, através do **trait `RegistaLog`**:
+
+-   **UserController** — criação, atualização e remoção de utilizadores.
+-   **ReviewController** — aprovação e rejeição de reviews.
+-   **RequisicaoController** — criação, aprovação, devolução de livros.
+-   **LivroController** — criação, edição e remoção de livros.
+-   **PagamentoController** — registo de pagamentos e alterações de estado.
+-   **CarrinhoController** — adicionar/remover itens, checkout.
+-   **Admin\LivroStockController** — atualização de stock.
+
+# Ajustes no Dashboard
+
+-   Cards expansíveis com `open: false` por defeito (inicialmente fechados).
+-   Aplicado `items-start` na grid para que cada card expanda/recolha de forma independente.
+-   Criado **Painel de Avisos Importantes** expansível (reviews pendentes, requisições ativas, stock crítico).
+-   Adicionado botão **"Voltar ao Menu"** nas páginas de Gestão de Stock (`route('home')`).
+
+## Cobertura de Logs — Autenticação
+
+# Eventos registados
+
+-   **Login bem-sucedido** (`Illuminate\Auth\Events\Login`)
+-   **Tentativa de login falhada** (`Illuminate\Auth\Events\Failed`)
+
+# Implementação
+
+-   **Provider:** `App\Providers\EventServiceProvider`
+    -   Regista os listeners para os eventos de autenticação.
+-   **Listeners:**
+    -   `App\Listeners\RegistarLogin`
+        -   Usa o `trait App\Traits\RegistaLog` para criar um registo com:
+            -   `modulo`: `Autenticação`
+            -   `objeto_id`: ID do utilizador
+            -   `alteracao`: `"Login bem-sucedido"`
+            -   `ip` e `browser` capturados automaticamente
+    -   `App\Listeners\RegistarFalhaLogin`
+        -   Cria um registo direto em `logs` com:
+            -   `user_id`: `null` (não autenticado)
+            -   `modulo`: `Autenticação`
+            -   `alteracao`: `"Tentativa de login falhada para o email: ..."`
+            -   `ip` e `browser` capturados automaticamente
+
+# Fluxo de funcionamento
+
+1. O Laravel dispara o evento (`Login` ou `Failed`) durante o processo de autenticação.
+2. O `EventServiceProvider` encaminha o evento para o listener correspondente.
+3. O listener regista a ação na tabela `logs`.
+4. O registo fica disponível na listagem de logs do admin e pode ser filtrado pelo módulo **"Autenticação"**.
+
+## Cobertura de Logs — Utilizadores
+
+# Eventos registados
+
+-   **Criação de utilizador (Admin)** — `UserController@store`
+    -   `modulo`: `Utilizadores`
+    -   `objeto_id`: ID do utilizador criado
+    -   `alteracao`: `"Criou o utilizador '{nome}' com o papel '{role}'"`
+-   **Criação de utilizador (Registo público)** — `App\Actions\Fortify\CreateNewUser@create`
+    -   `modulo`: `Utilizadores`
+    -   `objeto_id`: ID do utilizador criado
+    -   `alteracao`: `"Registo público do utilizador '{nome}' com o papel '{role}'"`
+-   **Eliminação de utilizador** — `UserController@destroy`
+    -   `modulo`: `Utilizadores`
+    -   `objeto_id`: ID do utilizador eliminado
+    -   `alteracao`: `"Apagou o utilizador '{nome}' com o papel '{role}'"`
+
+# Implementação
+
+-   **Trait:** `App\Traits\RegistaLog` usado em todos os pontos de criação/eliminação.
+-   **Segurança:**
+    -   Apenas admins podem criar ou apagar utilizadores no backoffice.
+    -   Proteção para impedir que um admin apague a si próprio (`auth()->id() !== $user->id`).
+-   **Views:**
+    -   `pages/users/index.blade.php` — botão "Apagar" visível apenas para admins e não para o próprio.
+    -   `pages/users/show.blade.php` — botão "Apagar Utilizador" com as mesmas restrições.
+-   **Rotas:**
+    -   `DELETE /users/{user}` → `users.destroy` (adicionado ao `Route::resource`).
+-   **Registo público:**
+    -   Implementado diretamente no `CreateNewUser` do Fortify, garantindo que também o registo feito pelo próprio cidadão é auditado.
+
+---
+
 ## 📂 Funcionalidades
 
 -   Autenticação com 2FA (Google Authenticator).

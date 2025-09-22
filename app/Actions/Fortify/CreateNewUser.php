@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Traits\RegistaLog;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -11,6 +12,7 @@ use Laravel\Jetstream\Jetstream;
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules;
+    use RegistaLog;
 
     /**
      * Validate and create a newly registered user.
@@ -26,11 +28,20 @@ class CreateNewUser implements CreatesNewUsers
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),
             'role' => 'cidadao',
         ]);
+
+        // 📜 Registar log da criação de utilizador via registo público
+        $this->registarLog(
+            'Utilizadores',
+            $user->id,
+            "Registo público do utilizador '{$user->name}' com o papel '{$user->role}'"
+        );
+
+        return $user;
     }
 }

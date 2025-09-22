@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use App\Models\Livro;
 use App\Models\CartItem;
 use App\Models\EnderecoEntrega;
+use App\Traits\RegistaLog;
 
 class CarrinhoController extends Controller
 {
+    use RegistaLog;
+
     public function add(Request $request, Livro $livro)
     {
         $data = $request->validate([
@@ -25,7 +28,6 @@ class CarrinhoController extends Controller
             if (! $livro->isDisponivelParaRequisicao()) {
                 return back()->with('error', 'Este livro não está disponível para requisição.');
             }
-            // Mantemos o preço original da requisição
             $preco = $livro->preco;
         }
 
@@ -41,9 +43,15 @@ class CarrinhoController extends Controller
         $item->touched_at = now();
         $item->save();
 
+        // 📜 Log da adição ao carrinho
+        $this->registarLog(
+            'Carrinho',
+            $item->id,
+            "Adicionou o livro '{$livro->nome}' ao carrinho (tipo: {$data['tipo_encomenda']}, quantidade: {$item->quantity})"
+        );
+
         return back()->with('success', 'Livro adicionado ao carrinho.');
     }
-
 
     public function index()
     {
@@ -51,7 +59,6 @@ class CarrinhoController extends Controller
             ->where('user_id', auth()->id())
             ->get();
 
-        // Usa o preço guardado no carrinho (compra ou requisição)
         $subtotal = $itens->sum(fn($i) => $i->quantity * $i->preco_unitario);
 
         $morada = EnderecoEntrega::where('user_id', auth()->id())
@@ -61,12 +68,22 @@ class CarrinhoController extends Controller
         return view('pages.carrinho.index', compact('itens', 'subtotal', 'morada'));
     }
 
-
     public function remove(Livro $livro)
     {
-        CartItem::where('user_id', auth()->id())
+        $item = CartItem::where('user_id', auth()->id())
             ->where('livro_id', $livro->id)
-            ->delete();
+            ->first();
+
+        if ($item) {
+            // 📜 Log da remoção antes de apagar
+            $this->registarLog(
+                'Carrinho',
+                $item->id,
+                "Removeu o livro '{$livro->nome}' do carrinho"
+            );
+
+            $item->delete();
+        }
 
         return back()->with('success', 'Livro removido do carrinho.');
     }
@@ -89,6 +106,13 @@ class CarrinhoController extends Controller
             'quantity' => $data['quantity'],
             'touched_at' => now()
         ]);
+
+        // 📜 Log da atualização de quantidade
+        $this->registarLog(
+            'Carrinho',
+            $item->id,
+            "Atualizou a quantidade do livro '{$livro->nome}' no carrinho para {$data['quantity']}"
+        );
 
         return back()->with('success', 'Quantidade atualizada.');
     }

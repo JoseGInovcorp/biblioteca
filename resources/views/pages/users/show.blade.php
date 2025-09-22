@@ -16,6 +16,17 @@
     <p><strong>Perfil:</strong> {{ ucfirst($user->role) }}</p>
 </div>
 
+{{-- Botão de apagar apenas para admins e não para o próprio --}}
+@if($isAdmin && auth()->id() !== $user->id)
+    <form action="{{ route('users.destroy', $user) }}" method="POST" 
+          onsubmit="return confirm('Tem a certeza que quer apagar este utilizador?')"
+          class="mb-4">
+        @csrf
+        @method('DELETE')
+        <button type="submit" class="btn btn-error">🗑️ Apagar Utilizador</button>
+    </form>
+@endif
+
 <h3 class="text-xl font-semibold mt-6 mb-2">📦 Histórico de Requisições</h3>
 
 @if($user->requisicoes->isEmpty())

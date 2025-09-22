@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReviewCriada;
 use App\Mail\ReviewModerada;
+use App\Traits\RegistaLog;
 
 class ReviewController extends Controller
 {
+    use RegistaLog;
+
     // Cidadão submete review
     public function store(Request $request, Requisicao $requisicao)
     {
@@ -34,6 +37,13 @@ class ReviewController extends Controller
             'estado'        => 'suspenso',
         ]);
 
+        // 📜 Log da criação da review
+        $this->registarLog(
+            'Reviews',
+            $review->id,
+            "Submeteu uma review para o livro '{$review->livro->nome}' (estado inicial: suspenso)"
+        );
+
         // Enviar email para todos os admins
         $admins = \App\Models\User::where('role', 'admin')->get();
         foreach ($admins as $admin) {
@@ -43,7 +53,7 @@ class ReviewController extends Controller
         return redirect()->back()->with('success', 'Review enviada e aguarda moderação.');
     }
 
-    // Admin vê lista de reviews suspensos
+    // Admin vê lista de reviews
     public function index()
     {
         if (!auth()->user()->isAdmin()) {
@@ -56,7 +66,6 @@ class ReviewController extends Controller
             'recusadas' => Review::where('estado', 'recusado')->with('user', 'livro')->latest()->get(),
         ]);
     }
-
 
     // Admin modera review
     public function update(Request $request, Review $review)
@@ -73,6 +82,13 @@ class ReviewController extends Controller
         $review->estado = $request->estado;
         $review->justificacao = $request->estado === 'recusado' ? $request->justificacao : null;
         $review->save();
+
+        // 📜 Log da moderação
+        $this->registarLog(
+            'Reviews',
+            $review->id,
+            "Moderou a review #{$review->id} para o livro '{$review->livro->nome}' (novo estado: {$review->estado})"
+        );
 
         // Notificar cidadão
         Mail::to($review->user->email)->send(new ReviewModerada($review));

@@ -9,9 +9,12 @@ use App\Models\CartItem;
 use App\Models\Encomenda;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Traits\RegistaLog;
 
 class PagamentoController extends Controller
 {
+    use RegistaLog;
+
     public function checkout(Request $request)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
@@ -128,6 +131,14 @@ class PagamentoController extends Controller
                     Log::warning("📉 Livro esgotado: {$item->livro->nome} (ID {$item->livro->id})");
                 }
             }
+
+            // 📜 Registar log da criação da encomenda
+            $totalLivros = $itens->sum('quantity');
+            $this->registarLog(
+                'Encomendas',
+                $encomenda->id,
+                "Criou a encomenda #{$encomenda->id} com {$totalLivros} livro(s), total de €" . number_format($subtotal, 2, ',', ' ')
+            );
         });
 
         // Limpar carrinho e sessão

@@ -10,9 +10,12 @@ use App\Models\Livro;
 use App\Models\Requisicao;
 use App\Models\User;
 use App\Mail\RequisicaoCriada;
+use App\Traits\RegistaLog;
 
 class RequisicaoController extends Controller
 {
+    use RegistaLog;
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -131,6 +134,14 @@ class RequisicaoController extends Controller
         $requisicao = Requisicao::create($validated);
         $requisicao->loadMissing('livro', 'cidadao');
 
+        // 📜 Registar log da criação (inclui número sequencial se existir)
+        $seq = $requisicao->numero_sequencial ?? $requisicao->id;
+        $this->registarLog(
+            'Requisições',
+            $requisicao->id,
+            "Criou a requisição #{$seq} para o livro '{$requisicao->livro->nome}'"
+        );
+
         // 📧 Enviar email para cidadão
         Mail::to($requisicao->cidadao->email)
             ->send(new RequisicaoCriada($requisicao));
@@ -166,6 +177,14 @@ class RequisicaoController extends Controller
 
         $requisicao->update($validated);
 
+        // 📜 Registar log da atualização (inclui número sequencial)
+        $seq = $requisicao->numero_sequencial ?? $requisicao->id;
+        $this->registarLog(
+            'Requisições',
+            $requisicao->id,
+            "Atualizou a requisição #{$seq} para o livro '{$requisicao->livro->nome}' (novo estado: {$requisicao->status})"
+        );
+
         $livro = $requisicao->livro;
 
         // Verifica se o livro ficou disponível após esta entrega
@@ -196,10 +215,64 @@ class RequisicaoController extends Controller
             Storage::disk('public')->delete($requisicao->foto_cidadao);
         }
 
+        // Guardar dados para o log antes da eliminação
+        $seq = $requisicao->numero_sequencial ?? $requisicao->id;
+        $livroNome = optional($requisicao->livro)->nome ?? 'Desconhecido';
+
+        // 📜 Registar log da eliminação antes do delete
+        $this->registarLog(
+            'Requisições',
+            $requisicao->id,
+            "Apagou a requisição #{$seq} do livro '{$livroNome}'"
+        );
+
         $requisicao->delete();
 
         return redirect()
             ->route('requisicoes.index')
             ->with('success', 'Requisição apagada!');
+    }
+
+    public function devolver(Requisicao $requisicao)
+    {
+        // Apenas devolve se estiver ativa
+        if ($requisicao->status !== 'ativa') {
+            return back()->with('warning', 'Esta requisição já foi devolvida ou não está ativa.');
+        }
+
+        // Atualizar estado e data de devolução
+        $requisicao->update([
+            'status' => 'entregue',
+            'data_fim_real' => now(),
+        ]);
+
+        // 📜 Registar log da devolução (inclui número sequencial)
+        $seq = $requisicao->numero_sequencial ?? $requisicao->id;
+        $this->registarLog(
+            'Requisições',
+            $requisicao->id,
+            "Devolveu o livro '{$requisicao->livro->nome}' (requisição #{$seq})"
+        );
+
+        $livro = $requisicao->livro;
+
+        // Verificar se o livro ficou disponível e notificar alertas pendentes
+        $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
+
+        if ($ficouDisponivel) {
+            \Log::info("📡 Livro {$livro->id} ficou disponível após devolução. Verificando alertas...");
+
+            foreach ($livro->alertas()->whereNull('notificado_em')->get() as $alerta) {
+                try {
+                    Mail::to($alerta->user->email)->send(new \App\Mail\LivroDisponivelMail($livro, $alerta));
+                    $alerta->update(['notificado_em' => now()]);
+                    \Log::info("📧 Alerta enviado para {$alerta->user->email}");
+                } catch (\Exception $e) {
+                    \Log::error("❌ Erro ao enviar alerta: " . $e->getMessage());
+                }
+            }
+        }
+
+        return back()->with('success', 'Livro devolvido com sucesso!');
     }
 }
