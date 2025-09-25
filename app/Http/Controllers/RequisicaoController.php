@@ -21,18 +21,20 @@ class RequisicaoController extends Controller
         $user = auth()->user();
         $status = $request->input('status');
 
-        // 🔹 Incluímos 'review' para saber no index se já existe review associada
+        // Listagem com relações
         $query = Requisicao::with('livro', 'cidadao', 'review')->latest();
 
-        if ($user->isCidadao()) {
+        // Cidadão vê apenas as suas requisições
+        if (method_exists($user, 'isCidadao') && $user->isCidadao()) {
             $query->where('cidadao_id', $user->id);
         }
 
+        // Filtro por status
         if ($status) {
             $query->where('status', $status);
         }
 
-        // 📊 Indicadores
+        // Indicadores
         $totalAtivas = Requisicao::where('status', 'ativa')->count();
         $ultimos30Dias = Requisicao::where('created_at', '>=', now()->subDays(30))->count();
         $entreguesHoje = Requisicao::where('status', 'entregue')
@@ -52,14 +54,17 @@ class RequisicaoController extends Controller
 
     public function create(Request $request)
     {
+        // Livros sem requisição ativa
         $livrosDisponiveis = Livro::whereDoesntHave('requisicoes', function ($query) {
             $query->where('status', 'ativa');
         })->get();
 
         $livroSelecionado = $request->query('livro_id');
 
+        // Admin pode escolher cidadão
         $cidadaos = [];
-        if (auth()->user()->isAdmin()) {
+        $user = auth()->user();
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
             $cidadaos = User::where('role', 'cidadao')->orderBy('name')->get();
         }
 
@@ -76,23 +81,25 @@ class RequisicaoController extends Controller
             'foto_cidadao' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ];
 
-        // Valida cidadão se for Admin
-        if ($user->isAdmin()) {
+        // Admin escolhe cidadão
+        if (method_exists($user, 'isAdmin') && $user->isAdmin()) {
             $rules['cidadao_id'] = [
                 'required',
                 'integer',
                 Rule::exists('users', 'id')->where(function ($q) {
                     $q->where('role', 'cidadao');
-                })
+                }),
             ];
         }
 
         $validated = $request->validate($rules);
 
-        // Determinar cidadão alvo
-        $cidadaoId = $user->isAdmin() ? (int) $request->input('cidadao_id') : $user->id;
+        // Cidadão alvo
+        $cidadaoId = (method_exists($user, 'isAdmin') && $user->isAdmin())
+            ? (int) $request->input('cidadao_id')
+            : $user->id;
 
-        // Limite de 3 requisições ativas
+        // Limite de 3 ativas por cidadão
         $ativasCidadao = Requisicao::where('cidadao_id', $cidadaoId)
             ->where('status', 'ativa')
             ->count();
@@ -109,7 +116,16 @@ class RequisicaoController extends Controller
                 ->withInput();
         }
 
-        // Validar disponibilidade do livro
+        // Verificar stock disponível (para o teste de stock)
+        $livro = Livro::find($request->livro_id);
+        if ($livro && $livro->stock_venda <= 0) {
+            return redirect()
+                ->route('requisicoes.create')
+                ->withErrors(['livro_id' => 'Este livro não tem stock disponível.'])
+                ->withInput();
+        }
+
+        // Verificar se livro já está requisitado (ativa)
         $livroEmUso = Requisicao::where('livro_id', $request->livro_id)
             ->where('status', 'ativa')
             ->exists();
@@ -121,11 +137,13 @@ class RequisicaoController extends Controller
                 ->withInput();
         }
 
-        // Preencher campos
+        // Campos calculados
         $validated['cidadao_id'] = $cidadaoId;
         $validated['data_inicio'] = now();
         $validated['data_fim_prevista'] = now()->addDays(5);
+        $validated['status'] = 'ativa';
 
+        // Upload foto, se existir
         if ($request->hasFile('foto_cidadao')) {
             $validated['foto_cidadao'] = $request->file('foto_cidadao')->store('cidadaos', 'public');
         }
@@ -134,7 +152,7 @@ class RequisicaoController extends Controller
         $requisicao = Requisicao::create($validated);
         $requisicao->loadMissing('livro', 'cidadao');
 
-        // 📜 Registar log da criação (inclui número sequencial se existir)
+        // Log
         $seq = $requisicao->numero_sequencial ?? $requisicao->id;
         $this->registarLog(
             'Requisições',
@@ -142,11 +160,10 @@ class RequisicaoController extends Controller
             "Criou a requisição #{$seq} para o livro '{$requisicao->livro->nome}'"
         );
 
-        // 📧 Enviar email para cidadão
-        Mail::to($requisicao->cidadao->email)
-            ->send(new RequisicaoCriada($requisicao));
+        // Email cidadão
+        Mail::to($requisicao->cidadao->email)->send(new RequisicaoCriada($requisicao));
 
-        // 📧 Enviar email separado para cada admin
+        // Email admins
         $admins = User::where('role', 'admin')->pluck('email')->all();
         foreach ($admins as $adminEmail) {
             Mail::to($adminEmail)->send(new RequisicaoCriada($requisicao));
@@ -163,11 +180,6 @@ class RequisicaoController extends Controller
         return view('pages.requisicoes.show', compact('requisicao'));
     }
 
-    public function edit(Requisicao $requisicao)
-    {
-        return view('pages.requisicoes.edit', compact('requisicao'));
-    }
-
     public function update(Request $request, Requisicao $requisicao)
     {
         $validated = $request->validate([
@@ -177,7 +189,7 @@ class RequisicaoController extends Controller
 
         $requisicao->update($validated);
 
-        // 📜 Registar log da atualização (inclui número sequencial)
+        // Log
         $seq = $requisicao->numero_sequencial ?? $requisicao->id;
         $this->registarLog(
             'Requisições',
@@ -187,19 +199,16 @@ class RequisicaoController extends Controller
 
         $livro = $requisicao->livro;
 
-        // Verifica se o livro ficou disponível após esta entrega
+        // Se ficou disponível após atualização, notificar alertas
         $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
 
         if ($ficouDisponivel) {
-            \Log::info("📡 Livro {$livro->id} ficou disponível após entrega. Verificando alertas...");
-
             foreach ($livro->alertas()->whereNull('notificado_em')->get() as $alerta) {
                 try {
                     Mail::to($alerta->user->email)->send(new \App\Mail\LivroDisponivelMail($livro, $alerta));
                     $alerta->update(['notificado_em' => now()]);
-                    \Log::info("📧 Alerta enviado para {$alerta->user->email}");
                 } catch (\Exception $e) {
-                    \Log::error("❌ Erro ao enviar alerta: " . $e->getMessage());
+                    \Log::error("Erro ao enviar alerta: " . $e->getMessage());
                 }
             }
         }
@@ -215,11 +224,11 @@ class RequisicaoController extends Controller
             Storage::disk('public')->delete($requisicao->foto_cidadao);
         }
 
-        // Guardar dados para o log antes da eliminação
+        // Dados para log antes do delete
         $seq = $requisicao->numero_sequencial ?? $requisicao->id;
         $livroNome = optional($requisicao->livro)->nome ?? 'Desconhecido';
 
-        // 📜 Registar log da eliminação antes do delete
+        // Log antes da eliminação
         $this->registarLog(
             'Requisições',
             $requisicao->id,
@@ -240,13 +249,13 @@ class RequisicaoController extends Controller
             return back()->with('warning', 'Esta requisição já foi devolvida ou não está ativa.');
         }
 
-        // Atualizar estado e data de devolução
+        // Atualizar estado e data de devolução (compatível com enum e testes)
         $requisicao->update([
             'status' => 'entregue',
             'data_fim_real' => now(),
         ]);
 
-        // 📜 Registar log da devolução (inclui número sequencial)
+        // Log
         $seq = $requisicao->numero_sequencial ?? $requisicao->id;
         $this->registarLog(
             'Requisições',
@@ -260,15 +269,12 @@ class RequisicaoController extends Controller
         $ficouDisponivel = $livro->requisicoes()->where('status', 'ativa')->count() === 0;
 
         if ($ficouDisponivel) {
-            \Log::info("📡 Livro {$livro->id} ficou disponível após devolução. Verificando alertas...");
-
             foreach ($livro->alertas()->whereNull('notificado_em')->get() as $alerta) {
                 try {
                     Mail::to($alerta->user->email)->send(new \App\Mail\LivroDisponivelMail($livro, $alerta));
                     $alerta->update(['notificado_em' => now()]);
-                    \Log::info("📧 Alerta enviado para {$alerta->user->email}");
                 } catch (\Exception $e) {
-                    \Log::error("❌ Erro ao enviar alerta: " . $e->getMessage());
+                    \Log::error("Erro ao enviar alerta: " . $e->getMessage());
                 }
             }
         }

@@ -100,9 +100,6 @@
                             @method('PATCH')
                             <button type="submit" class="btn btn-sm btn-success">✅ Devolver</button>
                         </form>
-
-                        {{-- Botão antigo de receber livro (opcional manter) --}}
-                        <a href="{{ route('requisicoes.edit', $req) }}" class="btn btn-sm btn-warning">📥 Receber Livro</a>
                     @endif
                     
                     <form action="{{ route('requisicoes.destroy', $req) }}" method="POST" onsubmit="return confirm('Tem a certeza?')">

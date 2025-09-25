@@ -59,6 +59,7 @@ Route::middleware([
 
     /** 📦 Requisições */
     Route::resource('requisicoes', RequisicaoController::class)
+        ->only(['index', 'create', 'store', 'show', 'update', 'destroy'])
         ->parameters(['requisicoes' => 'requisicao']);
 
     // ➕ Rota extra para devolução de livros

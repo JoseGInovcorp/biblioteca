@@ -803,7 +803,7 @@ Implementado sistema de alertas que permite aos cidadãos receberem notificaçõ
 
 ---
 
-### Dia 26 — TAREFA 1 - Consulta de Logs (Admin)
+### Dia 26, 27 e 28 — TAREFA 1 - Consulta de Logs (Admin)
 
 -   **Migração** criada para a tabela `logs\_atividade` com campos: `id`, `user\_id`, `acao`, `descricao`, `created\_at`.
 
@@ -935,6 +935,113 @@ Registo de logs adicionado nos seguintes controladores, através do **trait `Reg
     -   `DELETE /users/{user}` → `users.destroy` (adicionado ao `Route::resource`).
 -   **Registo público:**
     -   Implementado diretamente no `CreateNewUser` do Fortify, garantindo que também o registo feito pelo próprio cidadão é auditado.
+
+---
+
+### Dia 29 — TAREFA 2 Testes Automáticos com Pest
+
+Este documento descreve os testes desenvolvidos para validar os principais fluxos de requisição de livros no sistema, conforme o enunciado da Tarefa 2. Os testes foram implementados com [Pest](https://pestphp.com/) e garantem que o comportamento da aplicação está alinhado com os requisitos funcionais.
+
+## 🔍 Testes Implementados
+
+# 1. Criação de Requisição de Livro
+
+-   Criar um utilizador com papel de cidadão.
+-   Criar um livro com stock disponível.
+-   Submeter uma requisição para esse livro.
+-   Verificar que a requisição foi criada com estado `'ativa'` e os dados estão corretos.
+
+# 2. Validação de Requisição
+
+-   Submeter uma requisição sem `livro_id`.
+-   Submeter uma requisição com `livro_id` inexistente.
+-   Verificar que o Laravel retorna erros de validação adequados.
+
+# 3. Devolução de Livro
+
+-   Criar uma requisição com estado `'ativa'`.
+-   Submeter uma devolução via rota `PATCH`.
+-   Verificar que o estado foi atualizado para `'entregue'` e que `data_fim_real` foi registada.
+
+# 4. Listagem de Requisições por Utilizador
+
+-   Criar múltiplas requisições para diferentes utilizadores.
+-   Autenticar como um utilizador específico.
+-   Verificar que apenas as suas requisições são listadas.
+
+# 5. Stock na Encomenda de Livros
+
+-   Criar um livro com `stock_venda = 0`.
+-   Tentar criar uma requisição para esse livro.
+-   Verificar que a operação é impedida com erro associado ao campo `livro_id`.
+
+---
+
+## Como Executar os Testes
+
+# Recriar a base de dados de testes
+
+php artisan migrate:fresh --env=testing
+
+# Executar todos os testes
+
+./vendor/bin/pest
+
+# Executar apenas os testes de requisições
+
+./vendor/bin/pest tests/Feature/RequisicoesTest.php
+
+## Estrutura do Projeto
+
+-   **Controller**
+
+    -   Localização: `app/Http/Controllers/RequisicaoController.php`
+    -   Responsável pela lógica de criação, devolução, listagem e validação de requisições.
+
+-   **Testes**
+
+    -   Localização: `tests/Feature/RequisicoesTest.php`
+    -   Utiliza Pest para escrita clara e expressiva dos testes.
+    -   Os testes são executados no ambiente `testing`, com base de dados isolada, guardada em \storage\database_test.sqlite.
+
+-   **Ambiente de Testes**
+
+    -   O ficheiro `.env.testing` define a configuração da base de dados de testes.
+    -   Antes de correr os testes, a base de dados é recriada com:
+        ```bash
+        php artisan migrate:fresh --env=testing
+        ```
+    -   Esta abordagem garante que os testes correm num ambiente limpo e controlado;
+
+-   **Factories**
+
+    -   Localização:
+        -   `database/factories/UserFactory.php`
+        -   `database/factories/LivroFactory.php`
+        -   `database/factories/RequisicaoFactory.php`
+    -   Preparadas para gerar dados realistas e compatíveis com os testes.
+
+-   **Migração**
+
+    -   Tabela: `requisicoes`
+    -   Campo relevante:
+        ```php
+        $table->enum('status', ['ativa', 'entregue'])->default('ativa');
+        ```
+
+-   **Modelo `User`**
+
+    -   Métodos auxiliares:
+
+        ```php
+        public function isCidadao() {
+            return $this->role === 'cidadao';
+        }
+
+        public function isAdmin() {
+            return $this->role === 'admin';
+        }
+        ```
 
 ---
 
